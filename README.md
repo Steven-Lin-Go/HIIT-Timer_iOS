@@ -25,7 +25,7 @@ Windows cannot run Apple's iOS Simulator. During development, use an iPhone with
 - [x] Pass TypeScript validation
 - [x] Pass all Expo Doctor checks
 - [x] Initialize this folder as a Git repository and publish it to GitHub
-- [ ] Confirm the GitHub Actions quality job passes in the published repository
+- [x] Confirm the GitHub Actions quality job passes in the published repository
 - [ ] Link the project to EAS and replace the temporary project ID
 - [ ] Register the test iPhone/iPad and provision the first preview build
 - [ ] Add `EXPO_TOKEN` to the GitHub repository secrets
