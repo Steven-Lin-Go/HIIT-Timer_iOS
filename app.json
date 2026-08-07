@@ -1,0 +1,19 @@
+{
+  "expo": {
+    "name": "HIIT Timer",
+    "slug": "hiit-timer",
+    "version": "0.1.0",
+    "orientation": "default",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.stevenlin.hiittimer",
+      "buildNumber": "1"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "REPLACE_WITH_EAS_PROJECT_ID"
+      }
+    }
+  }
+}

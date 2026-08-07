@@ -1,0 +1,29 @@
+{
+  "name": "hiit-timer",
+  "version": "0.1.0",
+  "private": true,
+  "main": "node_modules/expo/AppEntry.js",
+  "scripts": {
+    "start": "expo start",
+    "start:lan": "expo start --lan",
+    "start:tunnel": "expo start --tunnel",
+    "ios": "expo start --ios",
+    "typecheck": "tsc --noEmit",
+    "doctor": "npx expo-doctor@latest",
+    "stage1:preflight": "node scripts/check-stage1.mjs"
+  },
+  "dependencies": {
+    "expo": "~57.0.8",
+    "expo-status-bar": "~57.0.1",
+    "react": "19.2.3",
+    "react-native": "0.86.2",
+    "zustand": "^5.0.8"
+  },
+  "devDependencies": {
+    "@types/react": "~19.2.2",
+    "typescript": "~6.0.3"
+  },
+  "engines": {
+    "node": ">=22.13.0"
+  }
+}
