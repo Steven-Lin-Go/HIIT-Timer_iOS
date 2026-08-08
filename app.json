@@ -12,8 +12,9 @@
     },
     "extra": {
       "eas": {
-        "projectId": "REPLACE_WITH_EAS_PROJECT_ID"
+        "projectId": "51b9bb71-328a-46fe-a060-54181fc53f59"
       }
-    }
+    },
+    "owner": "starryjazz"
   }
 }
