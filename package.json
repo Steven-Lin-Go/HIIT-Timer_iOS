@@ -10,10 +10,14 @@
     "ios": "expo start --ios",
     "typecheck": "tsc --noEmit",
     "doctor": "npx expo-doctor@latest",
+    "test": "node --test \"scripts/*.test.ts\"",
     "stage1:preflight": "node scripts/check-stage1.mjs"
   },
   "dependencies": {
+    "@react-native-async-storage/async-storage": "2.2.0",
     "expo": "~57.0.8",
+    "expo-audio": "~57.0.3",
+    "expo-haptics": "~57.0.1",
     "expo-status-bar": "~57.0.1",
     "react": "19.2.3",
     "react-native": "0.86.2",

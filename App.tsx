@@ -1,6 +1,9 @@
+import { setAudioModeAsync, useAudioPlayer } from 'expo-audio';
+import * as Haptics from 'expo-haptics';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import {
+  AppState,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -100,11 +103,45 @@ export default function App() {
     totalRounds,
   } = useTimerStore();
 
+  const beep = useAudioPlayer(require('./assets/beep.wav'));
+  const lastCueRef = useRef<string | null>(null);
+
+  // Play cues even when the iOS ringer switch is on silent — a muted phone must
+  // still beep during a workout.
+  useEffect(() => {
+    setAudioModeAsync({ playsInSilentMode: true }).catch(() => {});
+  }, []);
+
   useEffect(() => {
     if (!currentSession) {
       setSession(DEFAULT_SESSION);
     }
   }, [currentSession, setSession]);
+
+  // Audio + haptic cue on each phase change, so users training without looking
+  // at the screen hear/feel work, rest, and completion boundaries.
+  useEffect(() => {
+    const cue = isComplete ? 'complete' : currentPhase;
+    const previous = lastCueRef.current;
+    lastCueRef.current = cue;
+
+    // Skip first render and silent transitions (reset/setSession leave the timer
+    // idle and not complete).
+    if (previous === null || previous === cue || (!isRunning && !isComplete)) {
+      return;
+    }
+
+    beep.seekTo(0);
+    beep.play();
+
+    if (cue === 'complete') {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+    } else if (cue === 'work') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy).catch(() => {});
+    } else if (cue === 'rest') {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    }
+  }, [beep, currentPhase, isComplete, isRunning]);
 
   useEffect(() => {
     if (!isRunning || isPaused || isComplete || !currentSession) {
@@ -117,6 +154,18 @@ export default function App() {
 
     return () => clearInterval(timer);
   }, [currentSession, isComplete, isPaused, isRunning, tick]);
+
+  // Recompute immediately when returning to foreground so a backgrounded/locked
+  // session catches up instantly instead of waiting for the next interval.
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (nextState) => {
+      if (nextState === 'active') {
+        tick();
+      }
+    });
+
+    return () => sub.remove();
+  }, [tick]);
 
   const displayPhase = isComplete ? 'complete' : currentPhase;
   const phaseMeta = PHASE_META[displayPhase];

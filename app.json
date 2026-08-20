@@ -10,11 +10,18 @@
       "bundleIdentifier": "com.stevenlin.hiittimer",
       "buildNumber": "1"
     },
+    "android": {
+      "package": "com.stevenlin.hiittimer",
+      "versionCode": 1
+    },
     "extra": {
       "eas": {
         "projectId": "51b9bb71-328a-46fe-a060-54181fc53f59"
       }
     },
-    "owner": "starryjazz"
+    "owner": "starryjazz",
+    "plugins": [
+      "expo-audio"
+    ]
   }
 }
