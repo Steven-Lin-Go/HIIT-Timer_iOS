@@ -13,7 +13,7 @@ const DEFAULTS: AppSettings = {
   sound: true,
   vibration: true,
   countdownVoice: false,
-  units: 'metric',
+  voiceLanguage: 'zh-TW',
   bodyWeightKg: 70,
 };
 

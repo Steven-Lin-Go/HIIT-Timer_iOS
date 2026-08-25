@@ -34,13 +34,13 @@ export interface HistoryEntry {
 }
 
 export type TimeFormat = 'MM:SS' | 'SS';
-export type Units = 'metric' | 'imperial';
 
+// Metric-only per product scope. Voice countdown supports zh-TW and English.
 export interface AppSettings {
   timeFormat: TimeFormat;
   sound: boolean;
   vibration: boolean;
   countdownVoice: boolean;
-  units: Units;
-  bodyWeightKg: number; // used for calorie estimate
+  voiceLanguage: 'zh-TW' | 'en';
+  bodyWeightKg: number; // kg, used for calorie estimate
 }

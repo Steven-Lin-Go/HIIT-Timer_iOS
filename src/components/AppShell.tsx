@@ -1,7 +1,10 @@
 import { setAudioModeAsync, useAudioPlayer } from 'expo-audio';
 import * as Haptics from 'expo-haptics';
+import * as Speech from 'expo-speech';
 import { useEffect, useRef } from 'react';
 import { AppState, SafeAreaView, StyleSheet, View } from 'react-native';
+
+import { speechLocale, voicePhrase } from '../lib/voice';
 
 import { useNavStore } from '../stores/navStore';
 import { useSettingsStore } from '../stores/settingsStore';
@@ -28,12 +31,17 @@ export function AppShell() {
   const isComplete = useTimerStore((s) => s.isComplete);
   const isPaused = useTimerStore((s) => s.isPaused);
   const isRunning = useTimerStore((s) => s.isRunning);
+  const timeRemaining = useTimerStore((s) => s.timeRemaining);
   const tick = useTimerStore((s) => s.tick);
   const setSession = useTimerStore((s) => s.setSession);
 
   const presets = useWorkoutStore((s) => s.presets);
   const soundOn = useSettingsStore((s) => s.sound);
   const vibrationOn = useSettingsStore((s) => s.vibration);
+  const voiceOn = useSettingsStore((s) => s.countdownVoice);
+  const voiceLang = useSettingsStore((s) => s.voiceLanguage);
+
+  const lastSpokenNumberRef = useRef<number | null>(null);
 
   const beep = useAudioPlayer(require('../../assets/beep.wav'));
   const lastCueRef = useRef<string | null>(null);
@@ -75,7 +83,29 @@ export function AppShell() {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
       }
     }
-  }, [beep, currentPhase, isComplete, isRunning, soundOn, vibrationOn]);
+
+    // Announce the new phase ("Work" / "休息" …) when voice countdown is on.
+    if (voiceOn) {
+      Speech.stop();
+      Speech.speak(voicePhrase(cue, voiceLang), { language: speechLocale[voiceLang] });
+    }
+  }, [beep, currentPhase, isComplete, isRunning, soundOn, vibrationOn, voiceOn, voiceLang]);
+
+  // Speak the final 3/2/1 seconds of the current segment.
+  useEffect(() => {
+    if (!voiceOn || !isRunning || isPaused || isComplete) {
+      lastSpokenNumberRef.current = null;
+      return;
+    }
+    if (timeRemaining >= 1 && timeRemaining <= 3) {
+      if (lastSpokenNumberRef.current !== timeRemaining) {
+        lastSpokenNumberRef.current = timeRemaining;
+        Speech.speak(String(timeRemaining), { language: speechLocale[voiceLang] });
+      }
+    } else {
+      lastSpokenNumberRef.current = null;
+    }
+  }, [timeRemaining, voiceOn, voiceLang, isRunning, isPaused, isComplete]);
 
   // 1s driver while running.
   useEffect(() => {

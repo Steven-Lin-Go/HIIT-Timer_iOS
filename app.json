@@ -21,7 +21,14 @@
     },
     "owner": "starryjazz",
     "plugins": [
-      "expo-audio"
+      "expo-audio",
+      [
+        "@kingstinct/react-native-healthkit",
+        {
+          "NSHealthShareUsageDescription": "HIIT Timer reads your heart rate from Apple Health to show it in your workout stats.",
+          "NSHealthUpdateUsageDescription": false
+        }
+      ]
     ]
   }
 }

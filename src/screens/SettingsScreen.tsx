@@ -40,18 +40,17 @@ export function SettingsScreen() {
             label="Countdown Voice"
             value={settings.countdownVoice}
             onChange={(countdownVoice) => update({ countdownVoice })}
-            last
+          />
+          <Choice
+            label="Voice Language"
+            options={['zh-TW', 'en']}
+            value={settings.voiceLanguage}
+            onSelect={(v) => update({ voiceLanguage: v as 'zh-TW' | 'en' })}
           />
         </View>
 
         <Text style={styles.group}>GENERAL</Text>
         <View style={styles.card}>
-          <Choice
-            label="Units"
-            options={['metric', 'imperial']}
-            value={settings.units}
-            onSelect={(v) => update({ units: v as 'metric' | 'imperial' })}
-          />
           <View style={[styles.row, styles.last]}>
             <Text style={styles.rowLabel}>Body Weight</Text>
             <View style={styles.weight}>
