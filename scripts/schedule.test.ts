@@ -60,3 +60,25 @@ test('no rest when restTime is zero', () => {
   assert.equal(computeTimerState(noRest, 30).currentRound, 2);
   assert.equal(computeTimerState(noRest, 50).isComplete, true);
 });
+
+test('per-session prepareTime overrides the default', () => {
+  const custom: WorkoutSession = { ...session, prepareTime: 5 };
+  // prepare[0,5) work1[5,25)
+  assert.equal(computeTimerState(custom, 0).timeRemaining, 5);
+  assert.equal(computeTimerState(custom, 5).currentPhase, 'work');
+});
+
+test('cooldown segment runs after the final work', () => {
+  const withCooldown: WorkoutSession = { ...session, cooldownTime: 15 };
+  // prepare[0,10) work1[10,30) rest1[30,40) work2[40,60) cooldown[60,75)
+  const s = computeTimerState(withCooldown, 60);
+  assert.equal(s.currentPhase, 'cooldown');
+  assert.equal(s.timeRemaining, 15);
+  assert.equal(s.isComplete, false);
+  assert.equal(computeTimerState(withCooldown, 75).isComplete, true);
+});
+
+test('zero cooldown adds no segment', () => {
+  const noCooldown: WorkoutSession = { ...session, cooldownTime: 0 };
+  assert.equal(computeTimerState(noCooldown, 60).isComplete, true);
+});

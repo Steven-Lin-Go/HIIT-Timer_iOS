@@ -1,7 +1,15 @@
 import { create } from 'zustand';
 
 import type { TimerState, WorkoutSession } from '../types';
-import { computeTimerState, PREPARE_SECONDS } from '../timer/schedule';
+import {
+  computeTimerState,
+  PREPARE_SECONDS,
+  segmentStarts,
+  totalScheduledSeconds,
+} from '../timer/schedule';
+import { estimateCalories } from '../stats/aggregate';
+import { useHistoryStore } from './historyStore';
+import { useSettingsStore } from './settingsStore';
 
 interface TimerStore extends TimerState {
   currentSession: WorkoutSession | null;
@@ -14,8 +22,23 @@ interface TimerStore extends TimerState {
   startTimer: () => void;
   pauseTimer: () => void;
   resetTimer: () => void;
+  skip: (direction: 'forward' | 'back') => void;
   tick: () => void;
 }
+
+// Write one history entry for a finished session (calorie estimate uses the
+// user's stored body weight). Shared by tick() and forward-skip completion.
+const recordCompletion = (session: WorkoutSession) => {
+  const duration = totalScheduledSeconds(session);
+  const { bodyWeightKg } = useSettingsStore.getState();
+  useHistoryStore.getState().record({
+    sessionId: session.id,
+    sessionName: session.name,
+    completedRounds: session.rounds,
+    totalDuration: duration,
+    estimatedCalories: estimateCalories(duration, bodyWeightKg),
+  });
+};
 
 const idleDerived = (session: WorkoutSession | null): TimerState => {
   if (!session) {
@@ -104,6 +127,52 @@ export const useTimerStore = create<TimerStore>((set, get) => ({
     set(createInitialState(state.currentSession));
   },
 
+  // Jump to the previous/next segment boundary by re-anchoring elapsed time.
+  // Ignored while paused, idle, or complete.
+  skip: (direction) => {
+    const state = get();
+    const session = state.currentSession;
+
+    if (!session || !state.isRunning || state.isPaused || state.isComplete || state.startEpoch === null) {
+      return;
+    }
+
+    const starts = segmentStarts(session);
+    const total = totalScheduledSeconds(session);
+    const now = Date.now();
+    const elapsed = (now - state.startEpoch - state.pausedAccumMs) / 1000;
+
+    let idx = 0;
+    for (let i = 0; i < starts.length; i += 1) {
+      if (elapsed >= starts[i]!) idx = i;
+    }
+
+    let target: number;
+    if (direction === 'forward') {
+      target = idx + 1 < starts.length ? starts[idx + 1]! : total;
+    } else {
+      // Within the first 2s of a segment, back goes to the previous one;
+      // otherwise it just restarts the current segment.
+      const withinCurrent = elapsed - starts[idx]!;
+      target = withinCurrent > 2 || idx === 0 ? starts[idx]! : starts[idx - 1]!;
+    }
+
+    const derived = computeTimerState(session, target);
+    if (derived.isComplete && !state.isComplete) {
+      recordCompletion(session);
+    }
+
+    set({
+      startEpoch: now - state.pausedAccumMs - target * 1000,
+      currentPhase: derived.currentPhase,
+      currentRound: derived.currentRound,
+      timeRemaining: derived.timeRemaining,
+      totalRounds: derived.totalRounds,
+      isComplete: derived.isComplete,
+      isRunning: !derived.isComplete,
+    });
+  },
+
   tick: () => {
     const state = get();
 
@@ -119,6 +188,11 @@ export const useTimerStore = create<TimerStore>((set, get) => ({
 
     const elapsedMs = Date.now() - state.startEpoch - state.pausedAccumMs;
     const derived = computeTimerState(state.currentSession, elapsedMs / 1000);
+
+    // Log one history entry on the false→true completion edge.
+    if (derived.isComplete && !state.isComplete) {
+      recordCompletion(state.currentSession);
+    }
 
     set({
       currentPhase: derived.currentPhase,
