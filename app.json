@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "HIIT Timer",
-    "slug": "hiit-timer",
+    "slug": "stevenlin",
     "version": "0.1.0",
     "orientation": "default",
     "userInterfaceStyle": "automatic",
@@ -12,14 +12,20 @@
     },
     "android": {
       "package": "com.stevenlin.hiittimer",
-      "versionCode": 1
+      "versionCode": 1,
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
+      ]
     },
     "extra": {
       "eas": {
-        "projectId": "51b9bb71-328a-46fe-a060-54181fc53f59"
+        "projectId": "884be3dc-bf2e-4b22-85e0-f81eb5d50520"
       }
     },
-    "owner": "starryjazz",
+    "owner": "stevenlin73s-team",
     "plugins": [
       "expo-audio",
       [
