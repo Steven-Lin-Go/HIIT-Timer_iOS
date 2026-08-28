@@ -1,6 +1,8 @@
+import { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
-import { colors, radius } from '../theme/fitness';
+import { useTheme } from '../theme/useTheme';
+import type { Palette } from '../theme/palettes';
 import type { DailyBucket } from '../stats/aggregate';
 
 interface Props {
@@ -11,6 +13,8 @@ interface Props {
 // Minimal bar chart drawn with plain Views (no chart lib). Each bar's height is
 // proportional to the day's total workout seconds.
 export function BarChart({ buckets, height = 140 }: Props) {
+  const c = useTheme();
+  const styles = useMemo(() => makeStyles(c), [c]);
   const max = Math.max(1, ...buckets.map((b) => b.totalSec));
 
   return (
@@ -24,7 +28,7 @@ export function BarChart({ buckets, height = 140 }: Props) {
                 styles.bar,
                 {
                   height: Math.max(b.totalSec > 0 ? 4 : 2, h),
-                  backgroundColor: b.totalSec > 0 ? colors.work : colors.surfaceAlt,
+                  backgroundColor: b.totalSec > 0 ? c.work : c.surfaceAlt,
                 },
               ]}
             />
@@ -43,25 +47,26 @@ export function BarChart({ buckets, height = 140 }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  wrap: {
-    alignItems: 'flex-end',
-    flexDirection: 'row',
-    gap: 4,
-    justifyContent: 'space-between',
-  },
-  col: {
-    alignItems: 'center',
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
-  bar: {
-    borderRadius: radius.sm,
-    width: '70%',
-  },
-  label: {
-    color: colors.muted,
-    fontSize: 10,
-    marginTop: 6,
-  },
-});
+const makeStyles = (c: Palette) =>
+  StyleSheet.create({
+    wrap: {
+      alignItems: 'flex-end',
+      flexDirection: 'row',
+      gap: 4,
+      justifyContent: 'space-between',
+    },
+    col: {
+      alignItems: 'center',
+      flex: 1,
+      justifyContent: 'flex-end',
+    },
+    bar: {
+      borderRadius: 12,
+      width: '70%',
+    },
+    label: {
+      color: c.muted,
+      fontSize: 10,
+      marginTop: 6,
+    },
+  });

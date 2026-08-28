@@ -13,7 +13,8 @@ const DEFAULTS: AppSettings = {
   sound: true,
   vibration: true,
   countdownVoice: false,
-  voiceLanguage: 'zh-TW',
+  language: 'zh-TW',
+  theme: 'fitness',
   bodyWeightKg: 70,
 };
 

@@ -1,14 +1,18 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { ScreenHeader } from '../components/ScreenHeader';
+import { useT } from '../i18n/useT';
+import type { StringKey } from '../i18n/strings';
 import { formatDuration } from '../lib/format';
 import { totalScheduledSeconds } from '../timer/schedule';
 import { useNavStore } from '../stores/navStore';
 import { useTimerStore } from '../stores/timerStore';
 import { useWorkoutStore } from '../stores/workoutStore';
 import type { WorkoutSession } from '../types';
-import { colors, difficultyColor, font, radius, spacing } from '../theme/fitness';
+import { useTheme } from '../theme/useTheme';
+import { difficultyColor, type Palette } from '../theme/palettes';
+import { font, radius, spacing } from '../theme/fitness';
 
 type SubTab = 'presets' | 'custom';
 
@@ -24,6 +28,9 @@ export function WorkoutsScreen() {
   const setTab = useNavStore((s) => s.setTab);
   const setTimerScreen = useNavStore((s) => s.setTimerScreen);
   const openSetup = useNavStore((s) => s.openSetup);
+  const c = useTheme();
+  const t = useT();
+  const styles = useMemo(() => makeStyles(c), [c]);
 
   const list = sub === 'presets' ? presets : custom;
 
@@ -35,13 +42,13 @@ export function WorkoutsScreen() {
 
   return (
     <View style={styles.container}>
-      <ScreenHeader title="WORKOUTS" />
+      <ScreenHeader title={t('header.workouts')} />
 
       <View style={styles.subTabs}>
         {(['presets', 'custom'] as SubTab[]).map((key) => (
           <Pressable key={key} onPress={() => setSub(key)} style={styles.subTab}>
             <Text style={[styles.subTabText, sub === key && styles.subTabActive]}>
-              {key === 'presets' ? 'PRESETS' : 'MY WORKOUTS'}
+              {key === 'presets' ? t('workouts.presets') : t('workouts.mine')}
             </Text>
             {sub === key ? <View style={styles.subTabBar} /> : null}
           </Pressable>
@@ -50,7 +57,7 @@ export function WorkoutsScreen() {
 
       <ScrollView contentContainerStyle={styles.body}>
         {list.length === 0 ? (
-          <Text style={styles.empty}>No custom workouts yet. Tap NEW to create one.</Text>
+          <Text style={styles.empty}>{t('workouts.empty')}</Text>
         ) : (
           list.map((w) => (
             <Pressable
@@ -65,24 +72,14 @@ export function WorkoutsScreen() {
               <View style={styles.cardMain}>
                 <Text style={styles.cardName}>{w.name}</Text>
                 <Text style={styles.cardMeta}>
-                  {w.workTime}s / {w.restTime}s · {w.rounds} rounds ·{' '}
+                  {w.workTime}s / {w.restTime}s · {w.rounds} {t('rounds')} ·{' '}
                   {formatDuration(totalScheduledSeconds(w))}
                 </Text>
               </View>
               {w.difficulty ? (
-                <View
-                  style={[
-                    styles.badge,
-                    { borderColor: difficultyColor[w.difficulty] ?? colors.muted },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.badgeText,
-                      { color: difficultyColor[w.difficulty] ?? colors.muted },
-                    ]}
-                  >
-                    {w.difficulty}
+                <View style={[styles.badge, { borderColor: difficultyColor(c, w.difficulty) }]}>
+                  <Text style={[styles.badgeText, { color: difficultyColor(c, w.difficulty) }]}>
+                    {t(`difficulty.${w.difficulty}` as StringKey)}
                   </Text>
                 </View>
               ) : null}
@@ -106,119 +103,114 @@ export function WorkoutsScreen() {
           style={({ pressed }) => [styles.newBtn, pressed && styles.pressed]}
           onPress={() => openSetup(null)}
         >
-          <Text style={styles.newText}>+ NEW WORKOUT</Text>
+          <Text style={styles.newText}>{t('workouts.new')}</Text>
         </Pressable>
       </View>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  subTabs: {
-    flexDirection: 'row',
-    gap: spacing.xl,
-    paddingHorizontal: spacing.lg,
-  },
-  subTab: {
-    alignItems: 'center',
-    paddingBottom: spacing.sm,
-  },
-  subTabText: {
-    color: colors.muted,
-    fontSize: font.small,
-    fontWeight: '800',
-    letterSpacing: 1.5,
-  },
-  subTabActive: {
-    color: colors.text,
-  },
-  subTabBar: {
-    backgroundColor: colors.work,
-    borderRadius: radius.pill,
-    height: 3,
-    marginTop: 6,
-    width: 28,
-  },
-  body: {
-    gap: spacing.sm,
-    padding: spacing.lg,
-  },
-  empty: {
-    color: colors.muted,
-    fontSize: font.body,
-    marginTop: spacing.xl,
-    textAlign: 'center',
-  },
-  card: {
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    flexDirection: 'row',
-    gap: spacing.sm,
-    padding: spacing.md,
-  },
-  cardActive: {
-    borderColor: colors.work,
-  },
-  cardMain: {
-    flex: 1,
-  },
-  cardName: {
-    color: colors.text,
-    fontSize: 16,
-    fontWeight: '800',
-  },
-  cardMeta: {
-    color: colors.muted,
-    fontSize: font.small,
-    marginTop: 4,
-  },
-  badge: {
-    borderRadius: radius.sm,
-    borderWidth: 1,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-  },
-  badgeText: {
-    fontSize: 10,
-    fontWeight: '800',
-    letterSpacing: 1,
-  },
-  rowActions: {
-    flexDirection: 'row',
-    gap: spacing.md,
-    marginLeft: spacing.sm,
-  },
-  editIcon: {
-    color: colors.muted,
-    fontSize: 18,
-  },
-  deleteIcon: {
-    fontSize: 16,
-  },
-  footer: {
-    paddingBottom: spacing.md,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.sm,
-  },
-  newBtn: {
-    alignItems: 'center',
-    backgroundColor: colors.work,
-    borderRadius: radius.lg,
-    paddingVertical: 16,
-  },
-  newText: {
-    color: colors.text,
-    fontSize: font.body,
-    fontWeight: '800',
-    letterSpacing: 1.5,
-  },
-  pressed: {
-    opacity: 0.85,
-  },
-});
+const makeStyles = (c: Palette) =>
+  StyleSheet.create({
+    container: { flex: 1 },
+    subTabs: {
+      flexDirection: 'row',
+      gap: spacing.xl,
+      paddingHorizontal: spacing.lg,
+    },
+    subTab: {
+      alignItems: 'center',
+      paddingBottom: spacing.sm,
+    },
+    subTabText: {
+      color: c.muted,
+      fontSize: font.small,
+      fontWeight: '800',
+      letterSpacing: 1.5,
+    },
+    subTabActive: {
+      color: c.text,
+    },
+    subTabBar: {
+      backgroundColor: c.work,
+      borderRadius: radius.pill,
+      height: 3,
+      marginTop: 6,
+      width: 28,
+    },
+    body: {
+      gap: spacing.sm,
+      padding: spacing.lg,
+    },
+    empty: {
+      color: c.muted,
+      fontSize: font.body,
+      marginTop: spacing.xl,
+      textAlign: 'center',
+    },
+    card: {
+      alignItems: 'center',
+      backgroundColor: c.surface,
+      borderColor: c.border,
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      flexDirection: 'row',
+      gap: spacing.sm,
+      padding: spacing.md,
+    },
+    cardActive: {
+      borderColor: c.work,
+    },
+    cardMain: { flex: 1 },
+    cardName: {
+      color: c.text,
+      fontSize: 16,
+      fontWeight: '800',
+    },
+    cardMeta: {
+      color: c.muted,
+      fontSize: font.small,
+      marginTop: 4,
+    },
+    badge: {
+      borderRadius: radius.sm,
+      borderWidth: 1,
+      paddingHorizontal: 8,
+      paddingVertical: 3,
+    },
+    badgeText: {
+      fontSize: 10,
+      fontWeight: '800',
+      letterSpacing: 1,
+    },
+    rowActions: {
+      flexDirection: 'row',
+      gap: spacing.md,
+      marginLeft: spacing.sm,
+    },
+    editIcon: {
+      color: c.muted,
+      fontSize: 18,
+    },
+    deleteIcon: {
+      fontSize: 16,
+    },
+    footer: {
+      paddingBottom: spacing.md,
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.sm,
+    },
+    newBtn: {
+      alignItems: 'center',
+      backgroundColor: c.work,
+      borderRadius: radius.lg,
+      paddingVertical: 16,
+    },
+    newText: {
+      color: c.text,
+      fontSize: font.body,
+      fontWeight: '800',
+      letterSpacing: 1.5,
+    },
+    pressed: { opacity: 0.85 },
+  });

@@ -1,14 +1,17 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { ScreenHeader } from '../components/ScreenHeader';
 import { Stepper } from '../components/Stepper';
+import { useT } from '../i18n/useT';
 import { formatClock } from '../lib/format';
 import { useNavStore } from '../stores/navStore';
 import { useTimerStore } from '../stores/timerStore';
 import { useWorkoutStore } from '../stores/workoutStore';
 import type { WorkoutDraft } from '../stores/workoutOps';
-import { colors, font, radius, spacing } from '../theme/fitness';
+import { useTheme } from '../theme/useTheme';
+import type { Palette } from '../theme/palettes';
+import { font, radius, spacing } from '../theme/fitness';
 
 const STANDARD: Partial<WorkoutDraft> = { workTime: 40, restTime: 20, rounds: 8 };
 const TABATA: Partial<WorkoutDraft> = { workTime: 20, restTime: 10, rounds: 8 };
@@ -35,6 +38,9 @@ export function TimerSetupScreen() {
   const getById = useWorkoutStore((s) => s.getById);
   const addWorkout = useWorkoutStore((s) => s.add);
   const updateWorkout = useWorkoutStore((s) => s.update);
+  const c = useTheme();
+  const t = useT();
+  const styles = useMemo(() => makeStyles(c), [c]);
 
   const seed = editingId ? getById(editingId) : currentSession;
 
@@ -49,7 +55,6 @@ export function TimerSetupScreen() {
   });
 
   const patch = (p: Partial<WorkoutDraft>) => setDraft((d) => ({ ...d, ...p }));
-
   const mode = detectMode(draft);
 
   const applyToTimer = () =>
@@ -77,58 +82,58 @@ export function TimerSetupScreen() {
 
   return (
     <View style={styles.container}>
-      <ScreenHeader title="TIMER SETUP" onBack={() => setTimerScreen('home')} right="none" />
+      <ScreenHeader title={t('header.setup')} onBack={() => setTimerScreen('home')} right="none" />
       <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
-        <Text style={styles.fieldLabel}>NAME</Text>
+        <Text style={styles.fieldLabel}>{t('setup.name')}</Text>
         <TextInput
           value={draft.name}
           onChangeText={(name) => patch({ name })}
-          placeholder="Workout name"
-          placeholderTextColor={colors.muted}
+          placeholder={t('setup.namePlaceholder')}
+          placeholderTextColor={c.muted}
           style={styles.input}
         />
 
         <View style={styles.card}>
           <Stepper
-            label="Work"
+            label={t('field.work')}
             value={draft.workTime}
-            accent={colors.work}
+            accent={c.work}
             step={5}
             min={5}
             format={(v) => formatClock(v)}
             onChange={(workTime) => patch({ workTime })}
           />
           <Stepper
-            label="Rest"
+            label={t('field.rest')}
             value={draft.restTime}
-            accent={colors.rest}
+            accent={c.rest}
             step={5}
             min={0}
             format={(v) => formatClock(v)}
             onChange={(restTime) => patch({ restTime })}
           />
           <Stepper
-            label="Rounds"
+            label={t('field.rounds')}
             value={draft.rounds}
-            accent={colors.prepare}
+            accent={c.prepare}
             step={1}
             min={1}
             max={99}
             onChange={(rounds) => patch({ rounds })}
           />
           <Stepper
-            label="Prepare Time"
+            label={t('field.prepare')}
             value={draft.prepareTime}
-            accent={colors.prepare}
+            accent={c.prepare}
             step={5}
             min={0}
             format={(v) => formatClock(v)}
             onChange={(prepareTime) => patch({ prepareTime })}
           />
           <Stepper
-            label="Cool Down"
+            label={t('field.cooldown')}
             value={draft.cooldownTime}
-            accent={colors.cooldown}
+            accent={c.cooldown}
             step={5}
             min={0}
             format={(v) => formatClock(v)}
@@ -136,7 +141,7 @@ export function TimerSetupScreen() {
           />
         </View>
 
-        <Text style={styles.fieldLabel}>TIMER MODE</Text>
+        <Text style={styles.fieldLabel}>{t('setup.timerMode')}</Text>
         <View style={styles.modeRow}>
           <Pressable
             style={({ pressed }) => [
@@ -147,7 +152,7 @@ export function TimerSetupScreen() {
             onPress={() => patch(STANDARD)}
           >
             <Text style={[styles.modeText, mode === 'standard' && styles.modeTextActive]}>
-              STANDARD
+              {t('setup.standard')}
             </Text>
           </Pressable>
           <Pressable
@@ -159,11 +164,11 @@ export function TimerSetupScreen() {
             onPress={() => patch(TABATA)}
           >
             <Text style={[styles.modeText, mode === 'tabata' && styles.modeTextActive]}>
-              TABATA
+              {t('setup.tabata')}
             </Text>
           </Pressable>
         </View>
-        <Text style={styles.hint}>STANDARD 40s/20s · TABATA 20s/10s × 8</Text>
+        <Text style={styles.hint}>{t('setup.modeHint')}</Text>
       </ScrollView>
 
       <View style={styles.actions}>
@@ -171,120 +176,119 @@ export function TimerSetupScreen() {
           style={({ pressed }) => [styles.useBtn, pressed && styles.pressed]}
           onPress={use}
         >
-          <Text style={styles.useText}>USE</Text>
+          <Text style={styles.useText}>{t('setup.use')}</Text>
         </Pressable>
         <Pressable
           style={({ pressed }) => [styles.saveBtn, pressed && styles.pressed]}
           onPress={save}
         >
-          <Text style={styles.saveText}>{editingId ? 'SAVE CHANGES' : 'SAVE WORKOUT'}</Text>
+          <Text style={styles.saveText}>
+            {editingId ? t('setup.saveChanges') : t('setup.saveNew')}
+          </Text>
         </Pressable>
       </View>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  body: {
-    padding: spacing.lg,
-    paddingBottom: spacing.xl,
-  },
-  fieldLabel: {
-    color: colors.muted,
-    fontSize: font.small,
-    fontWeight: '800',
-    letterSpacing: 1.5,
-    marginBottom: spacing.sm,
-    marginTop: spacing.md,
-  },
-  input: {
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    color: colors.text,
-    fontSize: 16,
-    fontWeight: '700',
-    paddingHorizontal: spacing.md,
-    paddingVertical: 12,
-  },
-  card: {
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    marginTop: spacing.md,
-    paddingHorizontal: spacing.md,
-  },
-  modeRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
-  modeBtn: {
-    alignItems: 'center',
-    backgroundColor: colors.surfaceAlt,
-    borderRadius: radius.md,
-    borderWidth: 1,
-    borderColor: 'transparent',
-    flex: 1,
-    paddingVertical: 12,
-  },
-  modeBtnActive: {
-    backgroundColor: colors.dutchOrange,
-    borderColor: colors.dutchOrange,
-  },
-  modeText: {
-    color: colors.text,
-    fontSize: font.small,
-    fontWeight: '800',
-    letterSpacing: 1.5,
-  },
-  modeTextActive: {
-    color: '#1A0E00',
-  },
-  hint: {
-    color: colors.muted,
-    fontSize: font.small,
-    marginTop: spacing.sm,
-  },
-  actions: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    paddingBottom: spacing.md,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.sm,
-  },
-  useBtn: {
-    alignItems: 'center',
-    borderColor: colors.border,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    flex: 1,
-    paddingVertical: 16,
-  },
-  useText: {
-    color: colors.text,
-    fontSize: font.body,
-    fontWeight: '800',
-    letterSpacing: 1.5,
-  },
-  saveBtn: {
-    alignItems: 'center',
-    backgroundColor: colors.work,
-    borderRadius: radius.lg,
-    flex: 1.4,
-    paddingVertical: 16,
-  },
-  saveText: {
-    color: colors.text,
-    fontSize: font.body,
-    fontWeight: '800',
-    letterSpacing: 1.5,
-  },
-  pressed: {
-    opacity: 0.85,
-  },
-});
+const makeStyles = (c: Palette) =>
+  StyleSheet.create({
+    container: { flex: 1 },
+    body: {
+      padding: spacing.lg,
+      paddingBottom: spacing.xl,
+    },
+    fieldLabel: {
+      color: c.muted,
+      fontSize: font.small,
+      fontWeight: '800',
+      letterSpacing: 1.5,
+      marginBottom: spacing.sm,
+      marginTop: spacing.md,
+    },
+    input: {
+      backgroundColor: c.surface,
+      borderColor: c.border,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      color: c.text,
+      fontSize: 16,
+      fontWeight: '700',
+      paddingHorizontal: spacing.md,
+      paddingVertical: 12,
+    },
+    card: {
+      backgroundColor: c.surface,
+      borderColor: c.border,
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      marginTop: spacing.md,
+      paddingHorizontal: spacing.md,
+    },
+    modeRow: {
+      flexDirection: 'row',
+      gap: spacing.sm,
+    },
+    modeBtn: {
+      alignItems: 'center',
+      backgroundColor: c.surfaceAlt,
+      borderRadius: radius.md,
+      borderWidth: 1,
+      borderColor: 'transparent',
+      flex: 1,
+      paddingVertical: 12,
+    },
+    modeBtnActive: {
+      backgroundColor: c.dutchOrange,
+      borderColor: c.dutchOrange,
+    },
+    modeText: {
+      color: c.text,
+      fontSize: font.small,
+      fontWeight: '800',
+      letterSpacing: 1.5,
+    },
+    modeTextActive: {
+      color: '#1A0E00',
+    },
+    hint: {
+      color: c.muted,
+      fontSize: font.small,
+      marginTop: spacing.sm,
+    },
+    actions: {
+      flexDirection: 'row',
+      gap: spacing.sm,
+      paddingBottom: spacing.md,
+      paddingHorizontal: spacing.lg,
+      paddingTop: spacing.sm,
+    },
+    useBtn: {
+      alignItems: 'center',
+      borderColor: c.border,
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      flex: 1,
+      paddingVertical: 16,
+    },
+    useText: {
+      color: c.text,
+      fontSize: font.body,
+      fontWeight: '800',
+      letterSpacing: 1.5,
+    },
+    saveBtn: {
+      alignItems: 'center',
+      backgroundColor: c.work,
+      borderRadius: radius.lg,
+      flex: 1.4,
+      paddingVertical: 16,
+    },
+    saveText: {
+      color: c.text,
+      fontSize: font.body,
+      fontWeight: '800',
+      letterSpacing: 1.5,
+    },
+    pressed: { opacity: 0.85 },
+  });

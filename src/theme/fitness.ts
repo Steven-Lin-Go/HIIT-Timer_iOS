@@ -1,21 +1,5 @@
-import type { TimerPhase } from '../timer/schedule';
-
-// Style 01 "Fitness" — dark, high-contrast, neon accents. Single source of
-// truth for colors/spacing/typography so screens never hardcode hex values.
-export const colors = {
-  bg: '#050B16',
-  surface: '#0E1626',
-  surfaceAlt: '#14213B',
-  border: 'rgba(255, 255, 255, 0.08)',
-  text: '#FFFFFF',
-  muted: '#9BA7C7',
-  work: '#FF3B3B', // red — the brand accent
-  rest: '#7CF1B1', // green
-  prepare: '#8D9BFF', // blue
-  cooldown: '#FFD36B', // amber
-  danger: '#FF5D5D',
-  dutchOrange: '#FF7F00', // House of Orange — selected timer-mode highlight
-} as const;
+// Shared layout tokens, identical across all themes. Colors live in palettes.ts
+// and are selected at runtime via useTheme().
 
 export const radius = {
   sm: 12,
@@ -41,21 +25,3 @@ export const font = {
   small: 13,
   timer: 80,
 } as const;
-
-// Per-phase accent + human labels, shared by home/run screens and cues.
-export const PHASE_META: Record<
-  TimerPhase | 'complete',
-  { label: string; accent: string }
-> = {
-  prepare: { label: 'PREPARE', accent: colors.prepare },
-  work: { label: 'WORK', accent: colors.work },
-  rest: { label: 'REST', accent: colors.rest },
-  cooldown: { label: 'COOL DOWN', accent: colors.cooldown },
-  complete: { label: 'DONE', accent: colors.rest },
-};
-
-export const difficultyColor: Record<string, string> = {
-  EASY: colors.rest,
-  MEDIUM: colors.cooldown,
-  HARD: colors.work,
-};

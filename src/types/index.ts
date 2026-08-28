@@ -35,12 +35,14 @@ export interface HistoryEntry {
 
 export type TimeFormat = 'MM:SS' | 'SS';
 
-// Metric-only per product scope. Voice countdown supports zh-TW and English.
+// Metric-only per product scope. `language` drives both UI text and voice
+// countdown (zh-TW / English). `theme` selects one of the four UI styles.
 export interface AppSettings {
   timeFormat: TimeFormat;
   sound: boolean;
   vibration: boolean;
   countdownVoice: boolean;
-  voiceLanguage: 'zh-TW' | 'en';
+  language: 'zh-TW' | 'en';
+  theme: 'fitness' | 'bohemia' | 'zen' | 'ikea';
   bodyWeightKg: number; // kg, used for calorie estimate
 }

@@ -1,11 +1,11 @@
 import { setAudioModeAsync, useAudioPlayer } from 'expo-audio';
 import * as Haptics from 'expo-haptics';
 import * as Speech from 'expo-speech';
-import { useEffect, useRef } from 'react';
+import { StatusBar } from 'expo-status-bar';
+import { useEffect, useMemo, useRef } from 'react';
 import { AppState, SafeAreaView, StyleSheet, View } from 'react-native';
 
 import { speechLocale, voicePhrase } from '../lib/voice';
-
 import { useNavStore } from '../stores/navStore';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useTimerStore } from '../stores/timerStore';
@@ -17,10 +17,11 @@ import { WorkoutsScreen } from '../screens/WorkoutsScreen';
 import { StatsScreen } from '../screens/StatsScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
 import { TabBar } from './TabBar';
-import { colors } from '../theme/fitness';
+import { useTheme } from '../theme/useTheme';
+import type { Palette } from '../theme/palettes';
 
-// Root shell: owns the timer runtime (ticking, audio/haptic cues, background
-// catch-up) and routes between tabs / sub-screens / the settings overlay.
+// Root shell: owns the timer runtime (ticking, audio/haptic/voice cues,
+// background catch-up) and routes between tabs / sub-screens / settings.
 export function AppShell() {
   const activeTab = useNavStore((s) => s.activeTab);
   const timerScreen = useNavStore((s) => s.timerScreen);
@@ -39,12 +40,13 @@ export function AppShell() {
   const soundOn = useSettingsStore((s) => s.sound);
   const vibrationOn = useSettingsStore((s) => s.vibration);
   const voiceOn = useSettingsStore((s) => s.countdownVoice);
-  const voiceLang = useSettingsStore((s) => s.voiceLanguage);
-
-  const lastSpokenNumberRef = useRef<number | null>(null);
+  const lang = useSettingsStore((s) => s.language);
+  const c = useTheme();
+  const styles = useMemo(() => makeStyles(c), [c]);
 
   const beep = useAudioPlayer(require('../../assets/beep.wav'));
   const lastCueRef = useRef<string | null>(null);
+  const lastSpokenNumberRef = useRef<number | null>(null);
 
   // Muted phones must still beep during a workout.
   useEffect(() => {
@@ -58,8 +60,7 @@ export function AppShell() {
     }
   }, [currentSession, presets, setSession]);
 
-  // Audio + haptic cue on each phase change, honoring the sound/vibration
-  // settings, so users training without looking still get boundaries.
+  // Audio + haptic + voice cue on each phase change.
   useEffect(() => {
     const cue = isComplete ? 'complete' : currentPhase;
     const previous = lastCueRef.current;
@@ -84,12 +85,11 @@ export function AppShell() {
       }
     }
 
-    // Announce the new phase ("Work" / "休息" …) when voice countdown is on.
     if (voiceOn) {
       Speech.stop();
-      Speech.speak(voicePhrase(cue, voiceLang), { language: speechLocale[voiceLang] });
+      Speech.speak(voicePhrase(cue, lang), { language: speechLocale[lang] });
     }
-  }, [beep, currentPhase, isComplete, isRunning, soundOn, vibrationOn, voiceOn, voiceLang]);
+  }, [beep, currentPhase, isComplete, isRunning, soundOn, vibrationOn, voiceOn, lang]);
 
   // Speak the final 3/2/1 seconds of the current segment.
   useEffect(() => {
@@ -100,12 +100,12 @@ export function AppShell() {
     if (timeRemaining >= 1 && timeRemaining <= 3) {
       if (lastSpokenNumberRef.current !== timeRemaining) {
         lastSpokenNumberRef.current = timeRemaining;
-        Speech.speak(String(timeRemaining), { language: speechLocale[voiceLang] });
+        Speech.speak(String(timeRemaining), { language: speechLocale[lang] });
       }
     } else {
       lastSpokenNumberRef.current = null;
     }
-  }, [timeRemaining, voiceOn, voiceLang, isRunning, isPaused, isComplete]);
+  }, [timeRemaining, voiceOn, lang, isRunning, isPaused, isComplete]);
 
   // 1s driver while running.
   useEffect(() => {
@@ -132,12 +132,12 @@ export function AppShell() {
     return <TimerHomeScreen />;
   };
 
-  // Hide the tab bar on immersive/modal screens.
   const showTabBar =
     !settingsOpen && !(activeTab === 'timer' && (timerScreen === 'run' || timerScreen === 'setup'));
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <StatusBar style={c.statusBar} />
       <View style={styles.content}>{renderScreen()}</View>
       {showTabBar ? <TabBar /> : null}
       {settingsOpen ? (
@@ -149,20 +149,19 @@ export function AppShell() {
   );
 }
 
-const styles = StyleSheet.create({
-  safeArea: {
-    backgroundColor: colors.bg,
-    flex: 1,
-  },
-  content: {
-    flex: 1,
-  },
-  overlay: {
-    backgroundColor: colors.bg,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-    right: 0,
-    top: 0,
-  },
-});
+const makeStyles = (c: Palette) =>
+  StyleSheet.create({
+    safeArea: {
+      backgroundColor: c.bg,
+      flex: 1,
+    },
+    content: { flex: 1 },
+    overlay: {
+      backgroundColor: c.bg,
+      bottom: 0,
+      left: 0,
+      position: 'absolute',
+      right: 0,
+      top: 0,
+    },
+  });

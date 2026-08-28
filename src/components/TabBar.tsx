@@ -1,18 +1,25 @@
+import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { useT } from '../i18n/useT';
 import { useNavStore, type Tab } from '../stores/navStore';
-import { colors } from '../theme/fitness';
+import { useTheme } from '../theme/useTheme';
+import type { Palette } from '../theme/palettes';
+import type { StringKey } from '../i18n/strings';
 
-const TABS: { key: Tab; label: string; icon: string }[] = [
-  { key: 'timer', label: 'TIMER', icon: '◷' },
-  { key: 'workouts', label: 'WORKOUTS', icon: '≣' },
-  { key: 'stats', label: 'STATS', icon: '▦' },
+const TABS: { key: Tab; labelKey: StringKey; icon: string }[] = [
+  { key: 'timer', labelKey: 'tab.timer', icon: '◷' },
+  { key: 'workouts', labelKey: 'tab.workouts', icon: '≣' },
+  { key: 'stats', labelKey: 'tab.stats', icon: '▦' },
 ];
 
 // Bottom navigation matching the mockup's TIMER / WORKOUTS / STATS bar.
 export function TabBar() {
   const activeTab = useNavStore((s) => s.activeTab);
   const setTab = useNavStore((s) => s.setTab);
+  const c = useTheme();
+  const t = useT();
+  const styles = useMemo(() => makeStyles(c), [c]);
 
   return (
     <View style={styles.bar}>
@@ -26,7 +33,7 @@ export function TabBar() {
             style={styles.tab}
           >
             <Text style={[styles.icon, active && styles.activeText]}>{tab.icon}</Text>
-            <Text style={[styles.label, active && styles.activeText]}>{tab.label}</Text>
+            <Text style={[styles.label, active && styles.activeText]}>{t(tab.labelKey)}</Text>
           </Pressable>
         );
       })}
@@ -34,31 +41,32 @@ export function TabBar() {
   );
 }
 
-const styles = StyleSheet.create({
-  bar: {
-    backgroundColor: colors.surface,
-    borderTopColor: colors.border,
-    borderTopWidth: 1,
-    flexDirection: 'row',
-    paddingBottom: 22,
-    paddingTop: 12,
-  },
-  tab: {
-    alignItems: 'center',
-    flex: 1,
-    gap: 3,
-  },
-  icon: {
-    color: colors.muted,
-    fontSize: 20,
-  },
-  label: {
-    color: colors.muted,
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 1,
-  },
-  activeText: {
-    color: colors.work,
-  },
-});
+const makeStyles = (c: Palette) =>
+  StyleSheet.create({
+    bar: {
+      backgroundColor: c.surface,
+      borderTopColor: c.border,
+      borderTopWidth: 1,
+      flexDirection: 'row',
+      paddingBottom: 22,
+      paddingTop: 12,
+    },
+    tab: {
+      alignItems: 'center',
+      flex: 1,
+      gap: 3,
+    },
+    icon: {
+      color: c.muted,
+      fontSize: 20,
+    },
+    label: {
+      color: c.muted,
+      fontSize: 10,
+      fontWeight: '700',
+      letterSpacing: 1,
+    },
+    activeText: {
+      color: c.work,
+    },
+  });
