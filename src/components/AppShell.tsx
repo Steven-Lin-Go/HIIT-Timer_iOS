@@ -3,7 +3,8 @@ import * as Haptics from 'expo-haptics';
 import * as Speech from 'expo-speech';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useMemo, useRef } from 'react';
-import { AppState, SafeAreaView, StyleSheet, View } from 'react-native';
+import { AppState, StyleSheet, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { speechLocale, voicePhrase } from '../lib/voice';
 import { useNavStore } from '../stores/navStore';
