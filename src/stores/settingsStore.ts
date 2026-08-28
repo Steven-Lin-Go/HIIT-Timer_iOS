@@ -16,6 +16,8 @@ const DEFAULTS: AppSettings = {
   language: 'zh-TW',
   theme: 'fitness',
   bodyWeightKg: 70,
+  backgroundUri: null,
+  backgroundLevel: 'medium',
 };
 
 export const useSettingsStore = create<SettingsStore>()(

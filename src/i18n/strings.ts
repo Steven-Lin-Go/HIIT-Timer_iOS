@@ -89,6 +89,20 @@ const en = {
   'settings.clearHistory': 'Clear Workout History',
   'settings.version': 'HIIT Timer · v1.0.0',
 
+  'settings.group.background': 'BACKDROP',
+  'settings.background': 'Custom Image',
+  'settings.backgroundChoose': 'CHOOSE',
+  'settings.backgroundChange': 'CHANGE',
+  'settings.backgroundRemove': 'REMOVE',
+  'settings.backgroundLevel': 'Visibility',
+  'settings.backgroundHint':
+    'Applies to the timer screens only. Lists, charts and cards keep a solid background, and a wash is always kept over your image so the countdown stays readable.',
+  'settings.backgroundDenied': 'Photo access is off. Enable it in Settings → Privacy → Photos.',
+  'settings.backgroundFailed': "That image couldn't be loaded. Try another one.",
+  'level.subtle': 'SUBTLE',
+  'level.medium': 'MEDIUM',
+  'level.bold': 'BOLD',
+
   'theme.fitness': 'Fitness',
   'theme.bohemia': 'Bohemia',
   'theme.zen': 'Zen',
@@ -184,6 +198,20 @@ const zh: Record<StringKey, string> = {
   'settings.bodyWeight': '體重',
   'settings.clearHistory': '清除訓練紀錄',
   'settings.version': 'HIIT Timer · v1.0.0',
+
+  'settings.group.background': '底圖',
+  'settings.background': '自訂底圖',
+  'settings.backgroundChoose': '選擇',
+  'settings.backgroundChange': '更換',
+  'settings.backgroundRemove': '移除',
+  'settings.backgroundLevel': '顯示強度',
+  'settings.backgroundHint':
+    '僅套用於計時畫面。清單、圖表與卡片維持純色底，且底圖上永遠保留一層遮罩，確保倒數數字清楚可讀。',
+  'settings.backgroundDenied': '相簿存取未開啟，請至 設定 → 隱私權 → 照片 開啟。',
+  'settings.backgroundFailed': '無法載入這張圖片，請換一張試試。',
+  'level.subtle': '淡',
+  'level.medium': '中',
+  'level.bold': '明顯',
 
   'theme.fitness': '健身',
   'theme.bohemia': '波希米亞',

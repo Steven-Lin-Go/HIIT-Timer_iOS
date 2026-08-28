@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { useHasPhotoBackdrop } from '../components/AppBackdrop';
 import { CircularTimer } from '../components/CircularTimer';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { useT } from '../i18n/useT';
@@ -22,6 +23,9 @@ export function TimerHomeScreen() {
   const c = useTheme();
   const t = useT();
   const styles = useMemo(() => makeStyles(c), [c]);
+  // Over a photo, free-floating labels get an opaque plate so the text never
+  // has to compete with whatever the user picked.
+  const onPhoto = useHasPhotoBackdrop(true);
 
   const start = () => {
     startTimer();
@@ -32,23 +36,26 @@ export function TimerHomeScreen() {
     <View style={styles.container}>
       <ScreenHeader title={t('header.timer')} />
       <View style={styles.body}>
-        <Text style={styles.status}>⚡ {t('home.ready')}</Text>
+        <Text style={[styles.status, onPhoto && styles.plate]}>⚡ {t('home.ready')}</Text>
 
         <CircularTimer
           time={formatClock(session?.workTime ?? 0, timeFormat)}
           phaseLabel={t('phase.work')}
           accent={phaseAccent(c, 'work')}
           subLabel={`1 / ${session?.rounds ?? 0} ${t('round')}`}
+          plate={onPhoto}
         />
 
-        <View style={styles.upNext}>
+        <View style={[styles.upNext, onPhoto && styles.plate]}>
           <Text style={styles.upNextLabel}>{t('home.upNextRest')}</Text>
           <Text style={styles.upNextValue}>
             {formatClock(session?.restTime ?? 0, timeFormat)}
           </Text>
         </View>
 
-        <Text style={styles.sessionName}>{session?.name ?? t('home.noWorkout')}</Text>
+        <Text style={[styles.sessionName, onPhoto && styles.plate]}>
+          {session?.name ?? t('home.noWorkout')}
+        </Text>
       </View>
 
       <View style={styles.actions}>
@@ -143,6 +150,13 @@ const makeStyles = (c: Palette) =>
       fontSize: font.small,
       fontWeight: '700',
       letterSpacing: 1.5,
+    },
+    plate: {
+      backgroundColor: c.plate,
+      borderRadius: radius.md,
+      overflow: 'hidden',
+      paddingHorizontal: 14,
+      paddingVertical: 8,
     },
     pressed: { opacity: 0.85 },
     disabled: { opacity: 0.4 },

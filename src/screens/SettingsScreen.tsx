@@ -1,15 +1,21 @@
-import { useMemo } from 'react';
-import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { useMemo, useState } from 'react';
+import { Alert, Image, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 
 import { ScreenHeader } from '../components/ScreenHeader';
+import { ThemeMotif } from '../components/ThemeMotif';
 import { useT } from '../i18n/useT';
+import { deleteBackground, pickBackground } from '../lib/background';
 import { useHistoryStore } from '../stores/historyStore';
 import { useNavStore } from '../stores/navStore';
 import { useSettingsStore } from '../stores/settingsStore';
-import type { ThemeName } from '../theme/palettes';
+import { PALETTES, type ThemeName } from '../theme/palettes';
 import { useTheme } from '../theme/useTheme';
 import type { Palette } from '../theme/palettes';
 import { font, radius, spacing } from '../theme/fitness';
+import type { BackgroundLevel } from '../types';
+
+const THEMES: ThemeName[] = ['fitness', 'bohemia', 'zen', 'ikea'];
+const LEVELS: BackgroundLevel[] = ['subtle', 'medium', 'bold'];
 
 // Screen 6: settings — sound/haptics/voice, time format, language, theme, body
 // weight (for calorie estimates), plus data reset. Persisted via settingsStore.
@@ -21,6 +27,30 @@ export function SettingsScreen() {
   const c = useTheme();
   const t = useT();
   const styles = useMemo(() => makeStyles(c), [c]);
+  const [picking, setPicking] = useState(false);
+
+  const chooseBackground = async () => {
+    if (picking) return;
+    setPicking(true);
+    const result = await pickBackground();
+    setPicking(false);
+    if (result.status === 'saved') {
+      // Drop the previous file only once the new one is safely in place.
+      const previous = settings.backgroundUri;
+      update({ backgroundUri: result.uri });
+      deleteBackground(previous);
+    } else if (result.status === 'denied') {
+      Alert.alert(t('settings.background'), t('settings.backgroundDenied'));
+    } else if (result.status === 'failed') {
+      Alert.alert(t('settings.background'), t('settings.backgroundFailed'));
+    }
+  };
+
+  const removeBackground = () => {
+    const previous = settings.backgroundUri;
+    update({ backgroundUri: null });
+    deleteBackground(previous);
+  };
 
   return (
     <View style={styles.container}>
@@ -76,25 +106,81 @@ export function SettingsScreen() {
         </View>
 
         <Text style={styles.group}>{t('settings.group.appearance')}</Text>
-        <View style={styles.card}>
-          {(['fitness', 'bohemia', 'zen', 'ikea'] as ThemeName[]).map((name, i, arr) => (
-            <Pressable
-              key={name}
-              onPress={() => update({ theme: name })}
-              style={[styles.row, i === arr.length - 1 && styles.last]}
-            >
-              <Text style={styles.rowLabel}>{t(`theme.${name}`)}</Text>
-              <View
+        <View style={styles.themeGrid}>
+          {THEMES.map((name) => {
+            const p = PALETTES[name];
+            const selected = settings.theme === name;
+            return (
+              <Pressable
+                key={name}
+                accessibilityRole="radio"
+                accessibilityState={{ selected }}
+                onPress={() => update({ theme: name })}
                 style={[
-                  styles.radio,
-                  settings.theme === name && { borderColor: c.work },
+                  styles.tile,
+                  { backgroundColor: p.bg, borderColor: selected ? p.work : c.border },
+                  selected && styles.tileSelected,
                 ]}
               >
-                {settings.theme === name ? <View style={[styles.radioDot, { backgroundColor: c.work }]} /> : null}
-              </View>
-            </Pressable>
-          ))}
+                <ThemeMotif variant="hero" theme={name} />
+                <View style={[styles.tileRing, { borderColor: p.work }]} />
+                <Text style={[styles.tileLabel, { color: p.text }]}>{t(`theme.${name}`)}</Text>
+              </Pressable>
+            );
+          })}
         </View>
+
+        <Text style={styles.group}>{t('settings.group.background')}</Text>
+        <View style={styles.card}>
+          <View style={styles.row}>
+            <Text style={styles.rowLabel}>{t('settings.background')}</Text>
+            <View style={styles.bgActions}>
+              {settings.backgroundUri ? (
+                <Image source={{ uri: settings.backgroundUri }} style={styles.thumb} />
+              ) : null}
+              <Pressable disabled={picking} hitSlop={8} onPress={chooseBackground}>
+                <Text style={[styles.action, picking && styles.actionBusy]}>
+                  {settings.backgroundUri
+                    ? t('settings.backgroundChange')
+                    : t('settings.backgroundChoose')}
+                </Text>
+              </Pressable>
+              {settings.backgroundUri ? (
+                <Pressable hitSlop={8} onPress={removeBackground}>
+                  <Text style={[styles.action, { color: c.danger }]}>
+                    {t('settings.backgroundRemove')}
+                  </Text>
+                </Pressable>
+              ) : null}
+            </View>
+          </View>
+          <View style={[styles.row, styles.last, !settings.backgroundUri && styles.rowDisabled]}>
+            <Text style={styles.rowLabel}>{t('settings.backgroundLevel')}</Text>
+            <View style={styles.segment}>
+              {LEVELS.map((level) => (
+                <Pressable
+                  key={level}
+                  disabled={!settings.backgroundUri}
+                  onPress={() => update({ backgroundLevel: level })}
+                  style={[
+                    styles.segmentBtn,
+                    settings.backgroundLevel === level && styles.segmentActive,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.segmentText,
+                      settings.backgroundLevel === level && styles.segmentTextActive,
+                    ]}
+                  >
+                    {t(`level.${level}`)}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          </View>
+        </View>
+        <Text style={styles.hint}>{t('settings.backgroundHint')}</Text>
 
         <Text style={styles.group}>{t('settings.group.data')}</Text>
         <View style={styles.card}>
@@ -217,19 +303,59 @@ const makeStyles = (c: Palette) =>
     segmentTextActive: {
       color: c.text,
     },
-    radio: {
-      alignItems: 'center',
-      borderColor: c.muted,
+    rowDisabled: { opacity: 0.45 },
+    themeGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.sm,
+    },
+    tile: {
+      borderRadius: radius.lg,
+      borderWidth: 1,
+      height: 104,
+      justifyContent: 'flex-end',
+      overflow: 'hidden',
+      padding: spacing.sm,
+      // Two per row, accounting for the gap between them.
+      width: '48.5%',
+    },
+    tileSelected: { borderWidth: 2 },
+    tileRing: {
       borderRadius: radius.pill,
-      borderWidth: 2,
-      height: 22,
-      justifyContent: 'center',
+      borderWidth: 3,
+      height: 34,
+      left: spacing.sm,
+      position: 'absolute',
+      top: spacing.sm,
+      width: 34,
+    },
+    tileLabel: {
+      fontSize: font.small,
+      fontWeight: '800',
+      letterSpacing: 1,
+    },
+    bgActions: {
+      alignItems: 'center',
+      flexDirection: 'row',
+      gap: spacing.md,
+    },
+    thumb: {
+      borderRadius: radius.sm,
+      height: 34,
       width: 22,
     },
-    radioDot: {
-      borderRadius: radius.pill,
-      height: 10,
-      width: 10,
+    action: {
+      color: c.work,
+      fontSize: font.small,
+      fontWeight: '800',
+      letterSpacing: 1,
+    },
+    actionBusy: { opacity: 0.5 },
+    hint: {
+      color: c.muted,
+      fontSize: font.small,
+      lineHeight: 19,
+      marginTop: spacing.sm,
     },
     weight: {
       alignItems: 'center',

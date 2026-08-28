@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { useHasPhotoBackdrop } from '../components/AppBackdrop';
 import { CircularTimer } from '../components/CircularTimer';
 import { useT } from '../i18n/useT';
 import { formatClock } from '../lib/format';
@@ -10,6 +11,7 @@ import { useTimerStore } from '../stores/timerStore';
 import { useTheme } from '../theme/useTheme';
 import { phaseAccent, type Palette } from '../theme/palettes';
 import { font, radius, spacing } from '../theme/fitness';
+import { PREPARE_SECONDS } from '../timer/schedule';
 
 // Screen 3: the running workout — ring, round counter, up-next, transport
 // controls (prev segment / pause-resume / next segment).
@@ -32,8 +34,19 @@ export function WorkoutRunScreen() {
   const c = useTheme();
   const t = useT();
   const styles = useMemo(() => makeStyles(c), [c]);
+  const onPhoto = useHasPhotoBackdrop(true);
 
   const displayPhase = isComplete ? 'complete' : currentPhase;
+
+  // Ring drains as the current segment counts down.
+  const phaseTotal = (() => {
+    if (!currentSession) return 0;
+    if (currentPhase === 'work') return currentSession.workTime;
+    if (currentPhase === 'rest') return currentSession.restTime;
+    if (currentPhase === 'prepare') return currentSession.prepareTime ?? PREPARE_SECONDS;
+    return currentSession.cooldownTime ?? 0;
+  })();
+  const progress = isComplete || phaseTotal <= 0 ? 1 : timeRemaining / phaseTotal;
 
   const upNext = (() => {
     if (isComplete) return null;
@@ -54,7 +67,7 @@ export function WorkoutRunScreen() {
         <Pressable accessibilityRole="button" onPress={finish} hitSlop={10}>
           <Text style={styles.close}>✕</Text>
         </Pressable>
-        <Text style={styles.round}>
+        <Text style={[styles.round, onPhoto && styles.plate]}>
           {t('round')} {Math.min(currentRound, totalRounds)} / {totalRounds}
         </Text>
         <View style={styles.closeSpacer} />
@@ -67,15 +80,19 @@ export function WorkoutRunScreen() {
           accent={phaseAccent(c, displayPhase)}
           subLabel={currentSession?.name}
           size={300}
+          progress={progress}
+          plate={onPhoto}
         />
 
         {upNext ? (
-          <View style={styles.upNext}>
+          <View style={[styles.upNext, onPhoto && styles.plate]}>
             <Text style={styles.upNextLabel}>{t('run.upNext')} · {upNext.label}</Text>
             <Text style={styles.upNextValue}>{formatClock(upNext.value, timeFormat)}</Text>
           </View>
         ) : (
-          <Text style={styles.completeText}>{isComplete ? t('run.complete') : ' '}</Text>
+          <Text style={[styles.completeText, isComplete && onPhoto && styles.plate]}>
+            {isComplete ? t('run.complete') : ' '}
+          </Text>
         )}
       </View>
 
@@ -234,6 +251,13 @@ const makeStyles = (c: Palette) =>
       fontSize: font.small,
       fontWeight: '800',
       letterSpacing: 2,
+    },
+    plate: {
+      backgroundColor: c.plate,
+      borderRadius: radius.md,
+      overflow: 'hidden',
+      paddingHorizontal: 14,
+      paddingVertical: 8,
     },
     pressed: { opacity: 0.85 },
   });

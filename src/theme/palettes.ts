@@ -1,7 +1,19 @@
 // Color palettes for the four UI styles from the mockups. Layout tokens
 // (radius/spacing/font) stay shared in fitness.ts; only colors swap per theme.
+//
+// Beyond flat colors each palette also carries the tokens that give a theme its
+// *character*: the ink colors its decorative motif is drawn with (see
+// components/ThemeMotif.tsx), the stroke treatment of the countdown ring, and
+// the scrim/plate colors that keep text readable over a background image.
 
 export type ThemeName = 'fitness' | 'bohemia' | 'zen' | 'ikea';
+
+// How the countdown ring is drawn. Each maps to a branch in CircularTimer.
+export type RingStyle =
+  | 'bold' // fitness: thick, even, hard-edged
+  | 'brush' // bohemia: two-tone painted arcs with soft caps
+  | 'enso' // zen: hand-drawn ink circle, uneven weight, open gap
+  | 'fine'; // ikea: thin track with a rounded progress cap
 
 export interface Palette {
   bg: string;
@@ -17,6 +29,19 @@ export interface Palette {
   danger: string;
   dutchOrange: string; // selected timer-mode highlight
   statusBar: 'light' | 'dark';
+
+  // --- Style character ---
+  motifInk: string; // primary stroke/fill of the decorative artwork
+  motifSoft: string; // secondary, lower-emphasis artwork color
+  motifOpacity: number; // how loudly the built-in motif reads (0-1)
+  ringStyle: RingStyle;
+
+  // --- Background-image legibility ---
+  // scrim is laid over a photo to pull it back toward the theme's base tone;
+  // plate is a translucent panel placed behind text that would otherwise float
+  // directly on the photo.
+  scrim: string;
+  plate: string;
 }
 
 export const PALETTES: Record<ThemeName, Palette> = {
@@ -35,6 +60,12 @@ export const PALETTES: Record<ThemeName, Palette> = {
     danger: '#FF5D5D',
     dutchOrange: '#FF7F00',
     statusBar: 'light',
+    motifInk: '#FF3B3B',
+    motifSoft: '#33415F',
+    motifOpacity: 0.55,
+    ringStyle: 'bold',
+    scrim: '#050B16',
+    plate: 'rgba(5, 11, 22, 0.72)',
   },
   // 02 Bohemia — warm earth tones, light.
   bohemia: {
@@ -51,6 +82,12 @@ export const PALETTES: Record<ThemeName, Palette> = {
     danger: '#A94E3B',
     dutchOrange: '#C4732A',
     statusBar: 'dark',
+    motifInk: '#B5533C',
+    motifSoft: '#7E8B6B',
+    motifOpacity: 0.5,
+    ringStyle: 'brush',
+    scrim: '#F3E9DC',
+    plate: 'rgba(243, 233, 220, 0.78)',
   },
   // 03 Zen — ink on paper, minimal, seal red.
   zen: {
@@ -67,6 +104,12 @@ export const PALETTES: Record<ThemeName, Palette> = {
     danger: '#C0392B',
     dutchOrange: '#CC6B29',
     statusBar: 'dark',
+    motifInk: '#2B2724',
+    motifSoft: '#9A948B',
+    motifOpacity: 0.42,
+    ringStyle: 'enso',
+    scrim: '#F4F2ED',
+    plate: 'rgba(244, 242, 237, 0.8)',
   },
   // 04 Natural (Ikea) — light, natural green/wood.
   ikea: {
@@ -83,6 +126,12 @@ export const PALETTES: Record<ThemeName, Palette> = {
     danger: '#C0553B',
     dutchOrange: '#E08A2B',
     statusBar: 'dark',
+    motifInk: '#5C7F4A',
+    motifSoft: '#C3B49B',
+    motifOpacity: 0.5,
+    ringStyle: 'fine',
+    scrim: '#F5F3EE',
+    plate: 'rgba(245, 243, 238, 0.78)',
   },
 };
 

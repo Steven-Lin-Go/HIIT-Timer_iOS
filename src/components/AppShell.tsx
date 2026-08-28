@@ -17,6 +17,7 @@ import { WorkoutRunScreen } from '../screens/WorkoutRunScreen';
 import { WorkoutsScreen } from '../screens/WorkoutsScreen';
 import { StatsScreen } from '../screens/StatsScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
+import { AppBackdrop } from './AppBackdrop';
 import { TabBar } from './TabBar';
 import { useTheme } from '../theme/useTheme';
 import type { Palette } from '../theme/palettes';
@@ -136,26 +137,35 @@ export function AppShell() {
   const showTabBar =
     !settingsOpen && !(activeTab === 'timer' && (timerScreen === 'run' || timerScreen === 'setup'));
 
+  // Only the timer home and the running workout carry a full backdrop and may
+  // use the user's own photo; the data-dense screens get a corner ornament so
+  // their lists and charts keep a plain, high-contrast ground.
+  const onTimerScreen = activeTab === 'timer' && (timerScreen === 'home' || timerScreen === 'run');
+
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar style={c.statusBar} />
-      <View style={styles.content}>{renderScreen()}</View>
-      {showTabBar ? <TabBar /> : null}
-      {settingsOpen ? (
-        <View style={styles.overlay}>
-          <SettingsScreen />
-        </View>
-      ) : null}
-    </SafeAreaView>
+    <View style={styles.root}>
+      <AppBackdrop variant={onTimerScreen ? 'hero' : 'corner'} allowCustom={onTimerScreen} />
+      <SafeAreaView style={styles.safeArea}>
+        <StatusBar style={c.statusBar} />
+        <View style={styles.content}>{renderScreen()}</View>
+        {showTabBar ? <TabBar /> : null}
+        {settingsOpen ? (
+          <View style={styles.overlay}>
+            <SettingsScreen />
+          </View>
+        ) : null}
+      </SafeAreaView>
+    </View>
   );
 }
 
 const makeStyles = (c: Palette) =>
   StyleSheet.create({
-    safeArea: {
+    root: {
       backgroundColor: c.bg,
       flex: 1,
     },
+    safeArea: { flex: 1 },
     content: { flex: 1 },
     overlay: {
       backgroundColor: c.bg,
