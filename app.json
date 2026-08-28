@@ -8,7 +8,10 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.stevenlin.hiittimer",
-      "buildNumber": "1"
+      "buildNumber": "1",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.stevenlin.hiittimer",

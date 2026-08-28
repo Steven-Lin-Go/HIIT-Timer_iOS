@@ -4,7 +4,6 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { BarChart } from '../components/BarChart';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { formatDuration } from '../lib/format';
-import { averageBpm, maxBpm } from '../health/heartRate';
 import { useHeartRateStore } from '../stores/heartRateStore';
 import { useHistoryStore } from '../stores/historyStore';
 import {
@@ -22,7 +21,7 @@ export function StatsScreen() {
   const [period, setPeriod] = useState<StatsPeriod>('week');
   const entries = useHistoryStore((s) => s.entries);
   const hrStatus = useHeartRateStore((s) => s.status);
-  const hrSamples = useHeartRateStore((s) => s.samples);
+  const hrStats = useHeartRateStore((s) => s.stats);
   const hrConnect = useHeartRateStore((s) => s.connect);
   const hrLoad = useHeartRateStore((s) => s.load);
 
@@ -31,13 +30,15 @@ export function StatsScreen() {
   const streak = currentStreakDays(entries);
   const buckets = dailyBuckets(entries, period);
 
-  // Pull heart-rate data from HealthKit whenever the period changes (no-op where
-  // HealthKit is unavailable or access hasn't been granted).
+  // Reload heart rate on period change ONLY if already connected. Don't auto-load
+  // on first mount: that would skip the "Connect Apple Health" step (querying
+  // before authorization hangs on "Loading…"). Status is read at call time, not
+  // as a dependency, to avoid a loading→ready refetch loop.
   useEffect(() => {
-    if (hrStatus !== 'unavailable' && hrStatus !== 'denied') {
+    if (useHeartRateStore.getState().status === 'ready') {
       hrLoad(period);
     }
-  }, [period, hrStatus, hrLoad]);
+  }, [period, hrLoad]);
 
   return (
     <View style={styles.container}>
@@ -87,17 +88,17 @@ export function StatsScreen() {
             </Pressable>
           ) : hrStatus === 'loading' ? (
             <Text style={styles.hrNote}>Loading…</Text>
-          ) : hrSamples.length === 0 ? (
+          ) : hrStats.avg === 0 && hrStats.max === 0 ? (
             <Text style={styles.hrNote}>No heart-rate data for this period.</Text>
           ) : (
             <View style={styles.hrRow}>
               <View style={styles.hrStat}>
-                <Text style={styles.hrValue}>{averageBpm(hrSamples)}</Text>
+                <Text style={styles.hrValue}>{hrStats.avg}</Text>
                 <Text style={styles.hrLabel}>AVG BPM</Text>
               </View>
               <View style={styles.hrDivider} />
               <View style={styles.hrStat}>
-                <Text style={styles.hrValue}>{maxBpm(hrSamples)}</Text>
+                <Text style={styles.hrValue}>{hrStats.max}</Text>
                 <Text style={styles.hrLabel}>MAX BPM</Text>
               </View>
             </View>

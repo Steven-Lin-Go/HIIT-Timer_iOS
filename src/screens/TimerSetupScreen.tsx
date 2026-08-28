@@ -13,6 +13,17 @@ import { colors, font, radius, spacing } from '../theme/fitness';
 const STANDARD: Partial<WorkoutDraft> = { workTime: 40, restTime: 20, rounds: 8 };
 const TABATA: Partial<WorkoutDraft> = { workTime: 20, restTime: 10, rounds: 8 };
 
+type TimerMode = 'standard' | 'tabata' | null;
+
+// Which preset the current work/rest/rounds match, so the button can highlight.
+const detectMode = (d: Pick<WorkoutDraft, 'workTime' | 'restTime' | 'rounds'>): TimerMode => {
+  const eq = (m: Partial<WorkoutDraft>) =>
+    d.workTime === m.workTime && d.restTime === m.restTime && d.rounds === m.rounds;
+  if (eq(TABATA)) return 'tabata';
+  if (eq(STANDARD)) return 'standard';
+  return null;
+};
+
 // Screen 2: create/edit a workout's timing. SAVE persists a custom workout and
 // applies it; USE applies the values to the timer without saving.
 export function TimerSetupScreen() {
@@ -38,6 +49,8 @@ export function TimerSetupScreen() {
   });
 
   const patch = (p: Partial<WorkoutDraft>) => setDraft((d) => ({ ...d, ...p }));
+
+  const mode = detectMode(draft);
 
   const applyToTimer = () =>
     setSession({
@@ -126,16 +139,28 @@ export function TimerSetupScreen() {
         <Text style={styles.fieldLabel}>TIMER MODE</Text>
         <View style={styles.modeRow}>
           <Pressable
-            style={({ pressed }) => [styles.modeBtn, pressed && styles.pressed]}
+            style={({ pressed }) => [
+              styles.modeBtn,
+              mode === 'standard' && styles.modeBtnActive,
+              pressed && styles.pressed,
+            ]}
             onPress={() => patch(STANDARD)}
           >
-            <Text style={styles.modeText}>STANDARD</Text>
+            <Text style={[styles.modeText, mode === 'standard' && styles.modeTextActive]}>
+              STANDARD
+            </Text>
           </Pressable>
           <Pressable
-            style={({ pressed }) => [styles.modeBtn, pressed && styles.pressed]}
+            style={({ pressed }) => [
+              styles.modeBtn,
+              mode === 'tabata' && styles.modeBtnActive,
+              pressed && styles.pressed,
+            ]}
             onPress={() => patch(TABATA)}
           >
-            <Text style={styles.modeText}>TABATA</Text>
+            <Text style={[styles.modeText, mode === 'tabata' && styles.modeTextActive]}>
+              TABATA
+            </Text>
           </Pressable>
         </View>
         <Text style={styles.hint}>STANDARD 40s/20s · TABATA 20s/10s × 8</Text>
@@ -202,14 +227,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: colors.surfaceAlt,
     borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: 'transparent',
     flex: 1,
     paddingVertical: 12,
+  },
+  modeBtnActive: {
+    backgroundColor: colors.dutchOrange,
+    borderColor: colors.dutchOrange,
   },
   modeText: {
     color: colors.text,
     fontSize: font.small,
     fontWeight: '800',
     letterSpacing: 1.5,
+  },
+  modeTextActive: {
+    color: '#1A0E00',
   },
   hint: {
     color: colors.muted,

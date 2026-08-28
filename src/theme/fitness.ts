@@ -14,6 +14,7 @@ export const colors = {
   prepare: '#8D9BFF', // blue
   cooldown: '#FFD36B', // amber
   danger: '#FF5D5D',
+  dutchOrange: '#FF7F00', // House of Orange — selected timer-mode highlight
 } as const;
 
 export const radius = {

@@ -1,8 +1,11 @@
 import { Platform } from 'react-native';
 
-import type { HeartRateSample } from './heartRate';
-
 const HEART_RATE = 'HKQuantityTypeIdentifierHeartRate';
+
+export interface HeartRateStats {
+  avg: number;
+  max: number;
+}
 
 // Lazily require the native module so the app still runs where it isn't linked
 // (Expo Go, Android, the test runner). Cached: undefined = not tried yet,
@@ -45,28 +48,26 @@ export const requestHeartRateAuthorization = async (): Promise<boolean> => {
   }
 };
 
-// Read heart-rate samples in a date window, normalized to { bpm, date }.
-export const queryHeartRate = async (
+// Ask HealthKit to compute avg/max over the window. Using a statistics query
+// (not raw samples) keeps this O(1) over the bridge even for a year — pulling
+// every sample froze the UI for tens of seconds.
+export const queryHeartRateStats = async (
   startDate: Date,
   endDate: Date,
-): Promise<HeartRateSample[]> => {
+): Promise<HeartRateStats> => {
   const mod = getModule();
-  if (!mod) return [];
+  if (!mod) return { avg: 0, max: 0 };
   try {
-    const samples = await mod.queryQuantitySamples(HEART_RATE, {
-      unit: 'count/min',
-      filter: { date: { startDate, endDate } },
-      limit: 0, // all
-      ascending: true,
-    });
-    return (samples ?? []).map((sample: { quantity: number; startDate: Date | string }) => ({
-      bpm: Math.round(sample.quantity),
-      date:
-        sample.startDate instanceof Date
-          ? sample.startDate.toISOString()
-          : String(sample.startDate),
-    }));
+    const res = await mod.queryStatisticsForQuantity(
+      HEART_RATE,
+      ['discreteAverage', 'discreteMax'],
+      { unit: 'count/min', filter: { date: { startDate, endDate } } },
+    );
+    return {
+      avg: Math.round(res?.averageQuantity?.quantity ?? 0),
+      max: Math.round(res?.maximumQuantity?.quantity ?? 0),
+    };
   } catch {
-    return [];
+    return { avg: 0, max: 0 };
   }
 };
