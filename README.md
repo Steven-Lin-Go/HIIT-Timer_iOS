@@ -54,6 +54,43 @@ npm run doctor
 npm start
 ```
 
+## Working from another machine
+
+The heavy setup is already done and stored remotely, so a second computer does
+**not** repeat certificate/device/project setup:
+
+| Already done, portable | Where it lives |
+| --- | --- |
+| Distribution certificate + provisioning profile | EAS servers (remote credentials) |
+| Registered test iPhone (UDID) | Apple account, not the machine |
+| Project link (`owner`, `extra.eas.projectId`) | `app.json`, tracked in git |
+| HealthKit capability, bundle identifier | Apple Developer portal |
+
+On a fresh machine (needs Node + Git installed):
+
+```bash
+git clone <repo-url>
+cd HIITTimer
+npm install
+export EXPO_TOKEN=<your Expo access token>   # or add the line to ~/.bashrc
+```
+
+Create the token at expo.dev → Account settings → Access tokens. **Never commit
+the token value.** This machine (Windows) has no PowerShell access, so use
+token auth instead of the browser login flow.
+
+Then:
+
+- Iterate on JS/UI (no build needed): `npx expo start --dev-client`, open the
+  existing dev client on the iPhone.
+- Rebuild only when native code changes (new native module, `app.json`
+  plugins/permissions, bundle id, icon/splash, SDK upgrade):
+  `npx eas-cli@latest build -p ios --profile development`. It reuses the remote
+  credentials — you may be asked for Apple ID + 2FA to re-authenticate, but no
+  certificate/device re-setup.
+- A *different* iPhone must be registered once (`eas device:create`) and needs a
+  fresh build; the same iPhone does not.
+
 ## EAS initialization
 
 This must be completed once before GitHub Actions can trigger non-interactive builds. The first iOS preview build also provisions signing credentials and requires a paid Apple Developer account:
