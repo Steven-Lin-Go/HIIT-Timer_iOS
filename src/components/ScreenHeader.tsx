@@ -25,7 +25,7 @@ export function ScreenHeader({ title, onBack, right = 'settings' }: Props) {
     <View style={styles.header}>
       <View style={styles.side}>
         {onBack ? (
-          <Pressable accessibilityRole="button" onPress={onBack} hitSlop={10}>
+          <Pressable accessibilityRole="button" onPress={onBack} style={styles.tap}>
             <Text style={styles.icon}>‹</Text>
           </Pressable>
         ) : null}
@@ -33,7 +33,7 @@ export function ScreenHeader({ title, onBack, right = 'settings' }: Props) {
       <Text style={styles.title}>{title}</Text>
       <View style={[styles.side, styles.right]}>
         {right === 'settings' ? (
-          <Pressable accessibilityRole="button" onPress={openSettings} hitSlop={10}>
+          <Pressable accessibilityRole="button" onPress={openSettings} style={styles.tap}>
             <Text style={styles.icon}>⚙</Text>
           </Pressable>
         ) : null}
@@ -51,10 +51,18 @@ const makeStyles = (c: Palette, f: FontScale) =>
       paddingVertical: 14,
     },
     side: {
-      width: 40,
+      width: 44,
     },
     right: {
       alignItems: 'flex-end',
+    },
+    // 44pt is the smallest comfortable touch target on iOS; the glyphs alone
+    // are about half that.
+    tap: {
+      alignItems: 'center',
+      height: 44,
+      justifyContent: 'center',
+      width: 44,
     },
     title: {
       color: c.text,

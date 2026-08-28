@@ -149,12 +149,12 @@ export function AppShell() {
         <StatusBar style={c.statusBar} />
         <View style={styles.content}>{renderScreen()}</View>
         {showTabBar ? <TabBar /> : null}
-        {settingsOpen ? (
-          <View style={styles.overlay}>
-            <SettingsScreen />
-          </View>
-        ) : null}
       </SafeAreaView>
+      {settingsOpen ? (
+        <SafeAreaView style={styles.overlay}>
+          <SettingsScreen />
+        </SafeAreaView>
+      ) : null}
     </View>
   );
 }
