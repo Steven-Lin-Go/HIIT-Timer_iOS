@@ -22,8 +22,11 @@ export const spacing = {
 // Type scale for text. Read it through useFont() rather than importing `font`
 // directly, so sizes follow the interface language.
 export const font = {
-  micro: 10, // tab labels, badges, chart ticks
+  micro: 10, // chart ticks, stat hints
+  tab: 13, // bottom tab bar labels
+  chip: 13, // difficulty badges
   small: 13,
+  subTab: 16, // section tabs (presets / my workouts)
   body: 15,
   label: 16, // list rows, inputs, card titles
   action: 18, // primary buttons
@@ -48,7 +51,10 @@ export const ZH_FONT_BUMP = 2;
 const zhFont: FontScale = {
   ...font,
   micro: font.micro + ZH_FONT_BUMP,
+  tab: font.tab + ZH_FONT_BUMP,
+  chip: font.chip + ZH_FONT_BUMP,
   small: font.small + ZH_FONT_BUMP,
+  subTab: font.subTab + ZH_FONT_BUMP,
   body: font.body + ZH_FONT_BUMP,
   label: font.label + ZH_FONT_BUMP,
   action: font.action + ZH_FONT_BUMP,

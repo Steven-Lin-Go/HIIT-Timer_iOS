@@ -65,7 +65,7 @@ const makeStyles = (c: Palette, f: FontScale) =>
     },
     label: {
       color: c.muted,
-      fontSize: f.micro,
+      fontSize: f.tab,
       fontWeight: '700',
       letterSpacing: 1,
     },

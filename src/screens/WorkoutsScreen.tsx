@@ -126,7 +126,7 @@ const makeStyles = (c: Palette, f: FontScale) =>
     },
     subTabText: {
       color: c.muted,
-      fontSize: f.small,
+      fontSize: f.subTab,
       fontWeight: '800',
       letterSpacing: 1.5,
     },
@@ -181,7 +181,7 @@ const makeStyles = (c: Palette, f: FontScale) =>
       paddingVertical: 3,
     },
     badgeText: {
-      fontSize: f.micro,
+      fontSize: f.chip,
       fontWeight: '800',
       letterSpacing: 1,
     },
