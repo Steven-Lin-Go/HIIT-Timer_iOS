@@ -26,6 +26,7 @@ export const font = {
   tab: 13, // bottom tab bar labels
   chip: 13, // difficulty badges
   small: 13,
+  period: 15, // stats period selector (week / month / year)
   subTab: 16, // section tabs (presets / my workouts)
   body: 15,
   label: 16, // list rows, inputs, card titles
@@ -54,6 +55,7 @@ const zhFont: FontScale = {
   tab: font.tab + ZH_FONT_BUMP,
   chip: font.chip + ZH_FONT_BUMP,
   small: font.small + ZH_FONT_BUMP,
+  period: font.period + ZH_FONT_BUMP,
   subTab: font.subTab + ZH_FONT_BUMP,
   body: font.body + ZH_FONT_BUMP,
   label: font.label + ZH_FONT_BUMP,

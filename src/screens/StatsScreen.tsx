@@ -154,7 +154,7 @@ const makeStyles = (c: Palette, f: FontScale) =>
     },
     period: {
       color: c.muted,
-      fontSize: f.small,
+      fontSize: f.period,
       fontWeight: '800',
       letterSpacing: 1.5,
       paddingBottom: spacing.sm,
