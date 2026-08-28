@@ -9,8 +9,9 @@ import { useNavStore } from '../stores/navStore';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useTimerStore } from '../stores/timerStore';
 import { useTheme } from '../theme/useTheme';
+import { useFont } from '../theme/useFont';
 import { phaseAccent, type Palette } from '../theme/palettes';
-import { font, radius, spacing } from '../theme/fitness';
+import { radius, spacing, type FontScale } from '../theme/fitness';
 import { PREPARE_SECONDS } from '../timer/schedule';
 
 // Screen 3: the running workout — ring, round counter, up-next, transport
@@ -32,8 +33,9 @@ export function WorkoutRunScreen() {
   const timeFormat = useSettingsStore((s) => s.timeFormat);
   const setTimerScreen = useNavStore((s) => s.setTimerScreen);
   const c = useTheme();
+  const f = useFont();
   const t = useT();
-  const styles = useMemo(() => makeStyles(c), [c]);
+  const styles = useMemo(() => makeStyles(c, f), [c, f]);
   const onPhoto = useHasPhotoBackdrop(true);
 
   const displayPhase = isComplete ? 'complete' : currentPhase;
@@ -140,7 +142,7 @@ export function WorkoutRunScreen() {
   );
 }
 
-const makeStyles = (c: Palette) =>
+const makeStyles = (c: Palette, f: FontScale) =>
   StyleSheet.create({
     container: { flex: 1 },
     topRow: {
@@ -158,7 +160,7 @@ const makeStyles = (c: Palette) =>
     closeSpacer: { width: 22 },
     round: {
       color: c.text,
-      fontSize: font.body,
+      fontSize: f.body,
       fontWeight: '800',
       letterSpacing: 2,
     },
@@ -173,19 +175,19 @@ const makeStyles = (c: Palette) =>
     },
     upNextLabel: {
       color: c.muted,
-      fontSize: font.small,
+      fontSize: f.small,
       fontWeight: '700',
       letterSpacing: 1.5,
     },
     upNextValue: {
       color: c.text,
-      fontSize: font.h3,
+      fontSize: f.h3,
       fontWeight: '800',
       marginTop: 4,
     },
     completeText: {
       color: c.rest,
-      fontSize: font.h3,
+      fontSize: f.h3,
       fontWeight: '800',
       letterSpacing: 1.5,
       marginTop: spacing.xl,
@@ -235,7 +237,7 @@ const makeStyles = (c: Palette) =>
     },
     primaryText: {
       color: c.text,
-      fontSize: font.body,
+      fontSize: f.body,
       fontWeight: '800',
       letterSpacing: 2,
     },
@@ -248,7 +250,7 @@ const makeStyles = (c: Palette) =>
     },
     secondaryText: {
       color: c.muted,
-      fontSize: font.small,
+      fontSize: f.small,
       fontWeight: '800',
       letterSpacing: 2,
     },

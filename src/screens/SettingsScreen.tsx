@@ -10,8 +10,9 @@ import { useNavStore } from '../stores/navStore';
 import { useSettingsStore } from '../stores/settingsStore';
 import { PALETTES, type ThemeName } from '../theme/palettes';
 import { useTheme } from '../theme/useTheme';
+import { useFont } from '../theme/useFont';
 import type { Palette } from '../theme/palettes';
-import { font, radius, spacing } from '../theme/fitness';
+import { radius, spacing, type FontScale } from '../theme/fitness';
 import type { BackgroundLevel } from '../types';
 
 const THEMES: ThemeName[] = ['fitness', 'bohemia', 'zen', 'ikea'];
@@ -25,8 +26,9 @@ export function SettingsScreen() {
   const closeSettings = useNavStore((s) => s.closeSettings);
   const clearHistory = useHistoryStore((s) => s.clear);
   const c = useTheme();
+  const f = useFont();
   const t = useT();
-  const styles = useMemo(() => makeStyles(c), [c]);
+  const styles = useMemo(() => makeStyles(c, f), [c, f]);
   const [picking, setPicking] = useState(false);
 
   const chooseBackground = async () => {
@@ -249,13 +251,13 @@ function Choice({
   );
 }
 
-const makeStyles = (c: Palette) =>
+const makeStyles = (c: Palette, f: FontScale) =>
   StyleSheet.create({
     container: { flex: 1 },
     body: { padding: spacing.lg },
     group: {
       color: c.muted,
-      fontSize: font.small,
+      fontSize: f.small,
       fontWeight: '800',
       letterSpacing: 1.5,
       marginBottom: spacing.sm,
@@ -279,7 +281,7 @@ const makeStyles = (c: Palette) =>
     last: { borderBottomWidth: 0 },
     rowLabel: {
       color: c.text,
-      fontSize: 16,
+      fontSize: f.label,
       fontWeight: '600',
     },
     segment: {
@@ -297,7 +299,7 @@ const makeStyles = (c: Palette) =>
     },
     segmentText: {
       color: c.muted,
-      fontSize: font.small,
+      fontSize: f.small,
       fontWeight: '800',
     },
     segmentTextActive: {
@@ -330,7 +332,7 @@ const makeStyles = (c: Palette) =>
       width: 34,
     },
     tileLabel: {
-      fontSize: font.small,
+      fontSize: f.small,
       fontWeight: '800',
       letterSpacing: 1,
     },
@@ -346,14 +348,14 @@ const makeStyles = (c: Palette) =>
     },
     action: {
       color: c.work,
-      fontSize: font.small,
+      fontSize: f.small,
       fontWeight: '800',
       letterSpacing: 1,
     },
     actionBusy: { opacity: 0.5 },
     hint: {
       color: c.muted,
-      fontSize: font.small,
+      fontSize: f.small,
       lineHeight: 19,
       marginTop: spacing.sm,
     },
@@ -369,14 +371,14 @@ const makeStyles = (c: Palette) =>
     },
     weightValue: {
       color: c.text,
-      fontSize: 16,
+      fontSize: f.label,
       fontWeight: '800',
       minWidth: 60,
       textAlign: 'center',
     },
     version: {
       color: c.muted,
-      fontSize: font.small,
+      fontSize: f.small,
       marginTop: spacing.xl,
       textAlign: 'center',
     },

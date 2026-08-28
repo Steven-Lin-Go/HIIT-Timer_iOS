@@ -3,8 +3,9 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useNavStore } from '../stores/navStore';
 import { useTheme } from '../theme/useTheme';
+import { useFont } from '../theme/useFont';
 import type { Palette } from '../theme/palettes';
-import { font } from '../theme/fitness';
+import { type FontScale } from '../theme/fitness';
 
 interface Props {
   title: string;
@@ -17,7 +18,8 @@ interface Props {
 export function ScreenHeader({ title, onBack, right = 'settings' }: Props) {
   const openSettings = useNavStore((s) => s.openSettings);
   const c = useTheme();
-  const styles = useMemo(() => makeStyles(c), [c]);
+  const f = useFont();
+  const styles = useMemo(() => makeStyles(c, f), [c, f]);
 
   return (
     <View style={styles.header}>
@@ -40,7 +42,7 @@ export function ScreenHeader({ title, onBack, right = 'settings' }: Props) {
   );
 }
 
-const makeStyles = (c: Palette) =>
+const makeStyles = (c: Palette, f: FontScale) =>
   StyleSheet.create({
     header: {
       alignItems: 'center',
@@ -57,7 +59,7 @@ const makeStyles = (c: Palette) =>
     title: {
       color: c.text,
       flex: 1,
-      fontSize: font.h3,
+      fontSize: f.h3,
       fontWeight: '800',
       letterSpacing: 1,
       textAlign: 'center',

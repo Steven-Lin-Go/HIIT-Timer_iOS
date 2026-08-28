@@ -3,8 +3,9 @@ import { StyleSheet, Text, View } from 'react-native';
 import Svg, { Circle, G } from 'react-native-svg';
 
 import { useTheme } from '../theme/useTheme';
+import { useFont } from '../theme/useFont';
 import type { Palette, RingStyle } from '../theme/palettes';
-import { font, radius } from '../theme/fitness';
+import { radius, type FontScale } from '../theme/fitness';
 
 interface Props {
   time: string;
@@ -32,7 +33,8 @@ export function CircularTimer({
   plate = false,
 }: Props) {
   const c = useTheme();
-  const styles = useMemo(() => makeStyles(c), [c]);
+  const f = useFont();
+  const styles = useMemo(() => makeStyles(c, f), [c, f]);
 
   const spec = RING_SPECS[c.ringStyle];
   const stroke = spec.width;
@@ -181,7 +183,7 @@ const RING_SPECS: Record<RingStyle, RingSpec> = {
   },
 };
 
-const makeStyles = (c: Palette) =>
+const makeStyles = (c: Palette, f: FontScale) =>
   StyleSheet.create({
     center: {
       alignItems: 'center',
@@ -202,20 +204,20 @@ const makeStyles = (c: Palette) =>
       borderRadius: radius.xl,
     },
     phase: {
-      fontSize: font.small,
+      fontSize: f.small,
       fontWeight: '800',
       letterSpacing: 2,
     },
     time: {
       color: c.text,
-      fontSize: font.timer,
+      fontSize: f.timer,
       fontWeight: '800',
       letterSpacing: -2,
       marginTop: 4,
     },
     sub: {
       color: c.muted,
-      fontSize: font.small,
+      fontSize: f.small,
       fontWeight: '700',
       letterSpacing: 1.5,
       marginTop: 6,

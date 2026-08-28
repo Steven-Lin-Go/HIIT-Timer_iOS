@@ -10,8 +10,9 @@ import { useNavStore } from '../stores/navStore';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useTimerStore } from '../stores/timerStore';
 import { useTheme } from '../theme/useTheme';
+import { useFont } from '../theme/useFont';
 import { phaseAccent, type Palette } from '../theme/palettes';
-import { font, radius, spacing } from '../theme/fitness';
+import { radius, spacing, type FontScale } from '../theme/fitness';
 
 // Screen 1: the "Ready to Train" home — session summary, big ring, START.
 export function TimerHomeScreen() {
@@ -21,8 +22,9 @@ export function TimerHomeScreen() {
   const setTimerScreen = useNavStore((s) => s.setTimerScreen);
   const openSetup = useNavStore((s) => s.openSetup);
   const c = useTheme();
+  const f = useFont();
   const t = useT();
-  const styles = useMemo(() => makeStyles(c), [c]);
+  const styles = useMemo(() => makeStyles(c, f), [c, f]);
   // Over a photo, free-floating labels get an opaque plate so the text never
   // has to compete with whatever the user picked.
   const onPhoto = useHasPhotoBackdrop(true);
@@ -83,7 +85,7 @@ export function TimerHomeScreen() {
   );
 }
 
-const makeStyles = (c: Palette) =>
+const makeStyles = (c: Palette, f: FontScale) =>
   StyleSheet.create({
     container: { flex: 1 },
     body: {
@@ -93,7 +95,7 @@ const makeStyles = (c: Palette) =>
     },
     status: {
       color: c.rest,
-      fontSize: font.small,
+      fontSize: f.small,
       fontWeight: '800',
       letterSpacing: 1.5,
       marginBottom: spacing.xl,
@@ -104,19 +106,19 @@ const makeStyles = (c: Palette) =>
     },
     upNextLabel: {
       color: c.muted,
-      fontSize: font.small,
+      fontSize: f.small,
       fontWeight: '700',
       letterSpacing: 1.5,
     },
     upNextValue: {
       color: c.text,
-      fontSize: font.h3,
+      fontSize: f.h3,
       fontWeight: '800',
       marginTop: 4,
     },
     sessionName: {
       color: c.text,
-      fontSize: font.body,
+      fontSize: f.body,
       fontWeight: '700',
       letterSpacing: 1,
       marginTop: spacing.lg,
@@ -134,7 +136,7 @@ const makeStyles = (c: Palette) =>
     },
     startText: {
       color: c.text,
-      fontSize: 18,
+      fontSize: f.action,
       fontWeight: '800',
       letterSpacing: 2,
     },
@@ -147,7 +149,7 @@ const makeStyles = (c: Palette) =>
     },
     editText: {
       color: c.muted,
-      fontSize: font.small,
+      fontSize: f.small,
       fontWeight: '700',
       letterSpacing: 1.5,
     },

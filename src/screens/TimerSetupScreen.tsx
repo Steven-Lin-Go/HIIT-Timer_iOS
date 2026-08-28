@@ -10,8 +10,9 @@ import { useTimerStore } from '../stores/timerStore';
 import { useWorkoutStore } from '../stores/workoutStore';
 import type { WorkoutDraft } from '../stores/workoutOps';
 import { useTheme } from '../theme/useTheme';
+import { useFont } from '../theme/useFont';
 import type { Palette } from '../theme/palettes';
-import { font, radius, spacing } from '../theme/fitness';
+import { radius, spacing, type FontScale } from '../theme/fitness';
 
 const STANDARD: Partial<WorkoutDraft> = { workTime: 40, restTime: 20, rounds: 8 };
 const TABATA: Partial<WorkoutDraft> = { workTime: 20, restTime: 10, rounds: 8 };
@@ -39,8 +40,9 @@ export function TimerSetupScreen() {
   const addWorkout = useWorkoutStore((s) => s.add);
   const updateWorkout = useWorkoutStore((s) => s.update);
   const c = useTheme();
+  const f = useFont();
   const t = useT();
-  const styles = useMemo(() => makeStyles(c), [c]);
+  const styles = useMemo(() => makeStyles(c, f), [c, f]);
 
   const seed = editingId ? getById(editingId) : currentSession;
 
@@ -191,7 +193,7 @@ export function TimerSetupScreen() {
   );
 }
 
-const makeStyles = (c: Palette) =>
+const makeStyles = (c: Palette, f: FontScale) =>
   StyleSheet.create({
     container: { flex: 1 },
     body: {
@@ -200,7 +202,7 @@ const makeStyles = (c: Palette) =>
     },
     fieldLabel: {
       color: c.muted,
-      fontSize: font.small,
+      fontSize: f.small,
       fontWeight: '800',
       letterSpacing: 1.5,
       marginBottom: spacing.sm,
@@ -212,7 +214,7 @@ const makeStyles = (c: Palette) =>
       borderRadius: radius.md,
       borderWidth: 1,
       color: c.text,
-      fontSize: 16,
+      fontSize: f.label,
       fontWeight: '700',
       paddingHorizontal: spacing.md,
       paddingVertical: 12,
@@ -244,7 +246,7 @@ const makeStyles = (c: Palette) =>
     },
     modeText: {
       color: c.text,
-      fontSize: font.small,
+      fontSize: f.small,
       fontWeight: '800',
       letterSpacing: 1.5,
     },
@@ -253,7 +255,7 @@ const makeStyles = (c: Palette) =>
     },
     hint: {
       color: c.muted,
-      fontSize: font.small,
+      fontSize: f.small,
       marginTop: spacing.sm,
     },
     actions: {
@@ -273,7 +275,7 @@ const makeStyles = (c: Palette) =>
     },
     useText: {
       color: c.text,
-      fontSize: font.body,
+      fontSize: f.body,
       fontWeight: '800',
       letterSpacing: 1.5,
     },
@@ -286,7 +288,7 @@ const makeStyles = (c: Palette) =>
     },
     saveText: {
       color: c.text,
-      fontSize: font.body,
+      fontSize: f.body,
       fontWeight: '800',
       letterSpacing: 1.5,
     },

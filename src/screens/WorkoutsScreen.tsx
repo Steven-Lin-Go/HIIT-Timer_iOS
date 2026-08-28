@@ -11,8 +11,9 @@ import { useTimerStore } from '../stores/timerStore';
 import { useWorkoutStore } from '../stores/workoutStore';
 import type { WorkoutSession } from '../types';
 import { useTheme } from '../theme/useTheme';
+import { useFont } from '../theme/useFont';
 import { difficultyColor, type Palette } from '../theme/palettes';
-import { font, radius, spacing } from '../theme/fitness';
+import { radius, spacing, type FontScale } from '../theme/fitness';
 
 type SubTab = 'presets' | 'custom';
 
@@ -29,8 +30,9 @@ export function WorkoutsScreen() {
   const setTimerScreen = useNavStore((s) => s.setTimerScreen);
   const openSetup = useNavStore((s) => s.openSetup);
   const c = useTheme();
+  const f = useFont();
   const t = useT();
-  const styles = useMemo(() => makeStyles(c), [c]);
+  const styles = useMemo(() => makeStyles(c, f), [c, f]);
 
   const list = sub === 'presets' ? presets : custom;
 
@@ -110,7 +112,7 @@ export function WorkoutsScreen() {
   );
 }
 
-const makeStyles = (c: Palette) =>
+const makeStyles = (c: Palette, f: FontScale) =>
   StyleSheet.create({
     container: { flex: 1 },
     subTabs: {
@@ -124,7 +126,7 @@ const makeStyles = (c: Palette) =>
     },
     subTabText: {
       color: c.muted,
-      fontSize: font.small,
+      fontSize: f.small,
       fontWeight: '800',
       letterSpacing: 1.5,
     },
@@ -144,7 +146,7 @@ const makeStyles = (c: Palette) =>
     },
     empty: {
       color: c.muted,
-      fontSize: font.body,
+      fontSize: f.body,
       marginTop: spacing.xl,
       textAlign: 'center',
     },
@@ -164,12 +166,12 @@ const makeStyles = (c: Palette) =>
     cardMain: { flex: 1 },
     cardName: {
       color: c.text,
-      fontSize: 16,
+      fontSize: f.label,
       fontWeight: '800',
     },
     cardMeta: {
       color: c.muted,
-      fontSize: font.small,
+      fontSize: f.small,
       marginTop: 4,
     },
     badge: {
@@ -179,7 +181,7 @@ const makeStyles = (c: Palette) =>
       paddingVertical: 3,
     },
     badgeText: {
-      fontSize: 10,
+      fontSize: f.micro,
       fontWeight: '800',
       letterSpacing: 1,
     },
@@ -208,7 +210,7 @@ const makeStyles = (c: Palette) =>
     },
     newText: {
       color: c.text,
-      fontSize: font.body,
+      fontSize: f.body,
       fontWeight: '800',
       letterSpacing: 1.5,
     },

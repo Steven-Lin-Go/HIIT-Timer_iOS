@@ -4,7 +4,9 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useT } from '../i18n/useT';
 import { useNavStore, type Tab } from '../stores/navStore';
 import { useTheme } from '../theme/useTheme';
+import { useFont } from '../theme/useFont';
 import type { Palette } from '../theme/palettes';
+import type { FontScale } from '../theme/fitness';
 import type { StringKey } from '../i18n/strings';
 
 const TABS: { key: Tab; labelKey: StringKey; icon: string }[] = [
@@ -18,8 +20,9 @@ export function TabBar() {
   const activeTab = useNavStore((s) => s.activeTab);
   const setTab = useNavStore((s) => s.setTab);
   const c = useTheme();
+  const f = useFont();
   const t = useT();
-  const styles = useMemo(() => makeStyles(c), [c]);
+  const styles = useMemo(() => makeStyles(c, f), [c, f]);
 
   return (
     <View style={styles.bar}>
@@ -41,7 +44,7 @@ export function TabBar() {
   );
 }
 
-const makeStyles = (c: Palette) =>
+const makeStyles = (c: Palette, f: FontScale) =>
   StyleSheet.create({
     bar: {
       backgroundColor: c.surface,
@@ -62,7 +65,7 @@ const makeStyles = (c: Palette) =>
     },
     label: {
       color: c.muted,
-      fontSize: 10,
+      fontSize: f.micro,
       fontWeight: '700',
       letterSpacing: 1,
     },

@@ -1,6 +1,8 @@
 // Shared layout tokens, identical across all themes. Colors live in palettes.ts
 // and are selected at runtime via useTheme().
 
+import type { Lang } from '../i18n/strings';
+
 export const radius = {
   sm: 12,
   md: 18,
@@ -17,11 +19,40 @@ export const spacing = {
   xl: 28,
 } as const;
 
+// Type scale for text. Read it through useFont() rather than importing `font`
+// directly, so sizes follow the interface language.
 export const font = {
-  h1: 42,
-  h2: 28,
-  h3: 20,
-  body: 15,
+  micro: 10, // tab labels, badges, chart ticks
   small: 13,
+  body: 15,
+  label: 16, // list rows, inputs, card titles
+  action: 18, // primary buttons
+  h3: 20,
+  // Numeric readouts. Not scaled -- these show digits, and the layouts around
+  // them (stat tiles, the countdown ring) are sized to the current values.
+  h2: 28,
+  h1: 42,
   timer: 80,
 } as const;
+
+export type FontScale = Record<keyof typeof font, number>;
+
+/**
+ * Traditional Chinese glyphs carry far more stroke detail than Latin letters,
+ * so at a shared nominal size they read smaller and denser. Every size that
+ * carries words is bumped when the UI is in Chinese; digit-only and icon sizes
+ * are left alone.
+ */
+export const ZH_FONT_BUMP = 2;
+
+const zhFont: FontScale = {
+  ...font,
+  micro: font.micro + ZH_FONT_BUMP,
+  small: font.small + ZH_FONT_BUMP,
+  body: font.body + ZH_FONT_BUMP,
+  label: font.label + ZH_FONT_BUMP,
+  action: font.action + ZH_FONT_BUMP,
+  h3: font.h3 + ZH_FONT_BUMP,
+};
+
+export const fontFor = (lang: Lang): FontScale => (lang === 'zh-TW' ? zhFont : font);

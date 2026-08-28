@@ -15,8 +15,9 @@ import {
   type StatsPeriod,
 } from '../stats/aggregate';
 import { useTheme } from '../theme/useTheme';
+import { useFont } from '../theme/useFont';
 import type { Palette } from '../theme/palettes';
-import { font, radius, spacing } from '../theme/fitness';
+import { radius, spacing, type FontScale } from '../theme/fitness';
 
 // Screen 5: stats dashboard. All figures are derived from real workout history;
 // heart rate is read from HealthKit.
@@ -28,8 +29,9 @@ export function StatsScreen() {
   const hrConnect = useHeartRateStore((s) => s.connect);
   const hrLoad = useHeartRateStore((s) => s.load);
   const c = useTheme();
+  const f = useFont();
   const t = useT();
-  const styles = useMemo(() => makeStyles(c), [c]);
+  const styles = useMemo(() => makeStyles(c, f), [c, f]);
 
   const scoped = filterByPeriod(entries, period);
   const summary = summarize(scoped);
@@ -142,7 +144,7 @@ function Stat({
   );
 }
 
-const makeStyles = (c: Palette) =>
+const makeStyles = (c: Palette, f: FontScale) =>
   StyleSheet.create({
     container: { flex: 1 },
     periodRow: {
@@ -152,7 +154,7 @@ const makeStyles = (c: Palette) =>
     },
     period: {
       color: c.muted,
-      fontSize: font.small,
+      fontSize: f.small,
       fontWeight: '800',
       letterSpacing: 1.5,
       paddingBottom: spacing.sm,
@@ -177,19 +179,19 @@ const makeStyles = (c: Palette) =>
     },
     statValue: {
       color: c.text,
-      fontSize: font.h2,
+      fontSize: f.h2,
       fontWeight: '800',
     },
     statLabel: {
       color: c.muted,
-      fontSize: font.small,
+      fontSize: f.small,
       fontWeight: '700',
       letterSpacing: 1,
       marginTop: 4,
     },
     statHint: {
       color: c.muted,
-      fontSize: 10,
+      fontSize: f.micro,
     },
     streakCard: {
       alignItems: 'center',
@@ -202,19 +204,19 @@ const makeStyles = (c: Palette) =>
     },
     streakValue: {
       color: c.text,
-      fontSize: font.h1,
+      fontSize: f.h1,
       fontWeight: '800',
     },
     streakLabel: {
       color: c.muted,
-      fontSize: font.small,
+      fontSize: f.small,
       fontWeight: '800',
       letterSpacing: 2,
       marginTop: 2,
     },
     sectionTitle: {
       color: c.text,
-      fontSize: font.body,
+      fontSize: f.body,
       fontWeight: '800',
       letterSpacing: 1.5,
       marginBottom: spacing.sm,
@@ -229,13 +231,13 @@ const makeStyles = (c: Palette) =>
     },
     empty: {
       color: c.muted,
-      fontSize: font.body,
+      fontSize: f.body,
       marginTop: spacing.lg,
       textAlign: 'center',
     },
     hrNote: {
       color: c.muted,
-      fontSize: font.small,
+      fontSize: f.small,
       textAlign: 'center',
     },
     hrBtn: {
@@ -246,7 +248,7 @@ const makeStyles = (c: Palette) =>
     },
     hrBtnText: {
       color: c.text,
-      fontSize: font.small,
+      fontSize: f.small,
       fontWeight: '800',
       letterSpacing: 1.5,
     },
@@ -260,12 +262,12 @@ const makeStyles = (c: Palette) =>
     },
     hrValue: {
       color: c.work,
-      fontSize: font.h1,
+      fontSize: f.h1,
       fontWeight: '800',
     },
     hrLabel: {
       color: c.muted,
-      fontSize: font.small,
+      fontSize: f.small,
       fontWeight: '700',
       letterSpacing: 1.5,
       marginTop: 2,

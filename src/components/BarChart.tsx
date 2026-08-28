@@ -2,7 +2,9 @@ import { useMemo } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { useTheme } from '../theme/useTheme';
+import { useFont } from '../theme/useFont';
 import type { Palette } from '../theme/palettes';
+import type { FontScale } from '../theme/fitness';
 import type { DailyBucket } from '../stats/aggregate';
 
 interface Props {
@@ -14,7 +16,8 @@ interface Props {
 // proportional to the day's total workout seconds.
 export function BarChart({ buckets, height = 140 }: Props) {
   const c = useTheme();
-  const styles = useMemo(() => makeStyles(c), [c]);
+  const f = useFont();
+  const styles = useMemo(() => makeStyles(c, f), [c, f]);
   const max = Math.max(1, ...buckets.map((b) => b.totalSec));
 
   return (
@@ -47,7 +50,7 @@ export function BarChart({ buckets, height = 140 }: Props) {
   );
 }
 
-const makeStyles = (c: Palette) =>
+const makeStyles = (c: Palette, f: FontScale) =>
   StyleSheet.create({
     wrap: {
       alignItems: 'flex-end',
@@ -66,7 +69,7 @@ const makeStyles = (c: Palette) =>
     },
     label: {
       color: c.muted,
-      fontSize: 10,
+      fontSize: f.micro,
       marginTop: 6,
     },
   });

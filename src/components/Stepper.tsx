@@ -2,8 +2,9 @@ import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useTheme } from '../theme/useTheme';
+import { useFont } from '../theme/useFont';
 import type { Palette } from '../theme/palettes';
-import { radius } from '../theme/fitness';
+import { radius, type FontScale } from '../theme/fitness';
 
 interface Props {
   label: string;
@@ -28,7 +29,8 @@ export function Stepper({
   onChange,
 }: Props) {
   const c = useTheme();
-  const styles = useMemo(() => makeStyles(c), [c]);
+  const f = useFont();
+  const styles = useMemo(() => makeStyles(c, f), [c, f]);
   const clamp = (v: number) => Math.min(max, Math.max(min, v));
   const dotColor = accent ?? c.work;
 
@@ -57,7 +59,7 @@ export function Stepper({
   );
 }
 
-const makeStyles = (c: Palette) =>
+const makeStyles = (c: Palette, f: FontScale) =>
   StyleSheet.create({
     row: {
       alignItems: 'center',
@@ -75,7 +77,7 @@ const makeStyles = (c: Palette) =>
     label: {
       color: c.text,
       flex: 1,
-      fontSize: 16,
+      fontSize: f.label,
       fontWeight: '700',
     },
     controls: {
@@ -101,7 +103,7 @@ const makeStyles = (c: Palette) =>
     },
     value: {
       color: c.text,
-      fontSize: 16,
+      fontSize: f.label,
       fontWeight: '800',
       minWidth: 64,
       textAlign: 'center',
