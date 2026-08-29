@@ -28,7 +28,8 @@ export interface HistoryEntry {
   sessionId: string;
   sessionName: string;
   completedAt: string; // ISO string, JSON-safe for persistence
-  completedRounds: number;
+  completedRounds: number; // rounds the clock actually ran through
+  plannedRounds: number; // rounds the session was set up for
   totalDuration: number; // seconds, whole session including rest and cooldown
   workSeconds: number; // seconds spent in work intervals only
 }

@@ -46,6 +46,7 @@ const recordCompletion = (
     sessionId: session.id,
     sessionName: session.name,
     completedRounds: doneRounds.length,
+    plannedRounds: session.rounds,
     totalDuration: Math.max(0, Math.round(elapsedSeconds)),
     workSeconds: workSecondsForRounds(session, doneRounds),
   });

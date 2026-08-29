@@ -25,20 +25,55 @@ export const filterByPeriod = (
   return entries.filter((e) => new Date(e.completedAt).getTime() >= cutoff);
 };
 
+/**
+ * Entries from the window immediately before the current one, same length. Used
+ * to say whether this week beat the one before it.
+ */
+export const filterByPreviousPeriod = (
+  entries: HistoryEntry[],
+  period: StatsPeriod,
+  now: Date = new Date(),
+): HistoryEntry[] => {
+  const span = PERIOD_DAYS[period] * 24 * 60 * 60 * 1000;
+  const start = now.getTime() - span * 2;
+  const end = now.getTime() - span;
+  return entries.filter((e) => {
+    const t = new Date(e.completedAt).getTime();
+    return t >= start && t < end;
+  });
+};
+
+/**
+ * Percentage change from `previous` to `current`. Null when there is no
+ * baseline to compare against, which reads better than an infinite increase.
+ */
+export const percentChange = (current: number, previous: number): number | null =>
+  previous <= 0 ? null : Math.round(((current - previous) / previous) * 100);
+
 export interface StatsSummary {
   totalWorkouts: number;
   totalDurationSec: number;
   totalWorkSec: number;
   totalRounds: number;
+  plannedRounds: number;
+  /** Rounds done as a percentage of rounds set up, or null with no plan data. */
+  completionPct: number | null;
 }
 
-export const summarize = (entries: HistoryEntry[]): StatsSummary => ({
-  totalWorkouts: entries.length,
-  totalDurationSec: entries.reduce((s, e) => s + e.totalDuration, 0),
-  // Entries written before workSeconds existed have no value to add.
-  totalWorkSec: entries.reduce((s, e) => s + (e.workSeconds ?? 0), 0),
-  totalRounds: entries.reduce((s, e) => s + e.completedRounds, 0),
-});
+export const summarize = (entries: HistoryEntry[]): StatsSummary => {
+  // Entries written before these fields existed contribute nothing rather than
+  // being guessed at.
+  const totalRounds = entries.reduce((s, e) => s + e.completedRounds, 0);
+  const plannedRounds = entries.reduce((s, e) => s + (e.plannedRounds ?? 0), 0);
+  return {
+    totalWorkouts: entries.length,
+    totalDurationSec: entries.reduce((s, e) => s + e.totalDuration, 0),
+    totalWorkSec: entries.reduce((s, e) => s + (e.workSeconds ?? 0), 0),
+    totalRounds,
+    plannedRounds,
+    completionPct: plannedRounds === 0 ? null : Math.round((totalRounds / plannedRounds) * 100),
+  };
+};
 
 // Consecutive calendar days with >=1 workout, counting back from today. If today
 // has none but yesterday does, the streak still counts (grace for "not done yet").
@@ -61,6 +96,22 @@ export const currentStreakDays = (
     cursor.setDate(cursor.getDate() - 1);
   }
   return streak;
+};
+
+// Longest run of consecutive days with at least one workout, over all history.
+export const longestStreakDays = (entries: HistoryEntry[]): number => {
+  const days = [...new Set(entries.map((e) => dayKey(new Date(e.completedAt))))].sort();
+  if (days.length === 0) return 0;
+
+  let best = 1;
+  let run = 1;
+  for (let i = 1; i < days.length; i += 1) {
+    const previous = new Date(`${days[i - 1]}T00:00:00`);
+    previous.setDate(previous.getDate() + 1);
+    run = dayKey(previous) === days[i] ? run + 1 : 1;
+    best = Math.max(best, run);
+  }
+  return best;
 };
 
 export interface ChartBucket {

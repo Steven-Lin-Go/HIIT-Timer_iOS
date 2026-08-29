@@ -10,11 +10,15 @@ import {
   currentStreakDays,
   chartBuckets,
   filterByPeriod,
+  filterByPreviousPeriod,
+  longestStreakDays,
+  percentChange,
   summarize,
   type StatsPeriod,
 } from '../stats/aggregate';
 import { useTheme } from '../theme/useTheme';
 import { useFont } from '../theme/useFont';
+import type { StringKey } from '../i18n/strings';
 import type { Palette } from '../theme/palettes';
 import { radius, spacing, type FontScale } from '../theme/fitness';
 
@@ -30,7 +34,12 @@ export function StatsScreen() {
   const scoped = filterByPeriod(entries, period);
   const summary = summarize(scoped);
   const streak = currentStreakDays(entries);
+  const bestStreak = longestStreakDays(entries);
   const buckets = chartBuckets(entries, period);
+
+  // Work time against the equivalent window immediately before this one.
+  const previous = summarize(filterByPreviousPeriod(entries, period));
+  const workDelta = percentChange(summary.totalWorkSec, previous.totalWorkSec);
 
   return (
     <View style={styles.container}>
@@ -58,12 +67,41 @@ export function StatsScreen() {
             value={formatDuration(summary.totalWorkSec)}
             hint={t('stats.activeHint')}
           />
-          <Stat styles={styles} label={t('stats.rounds')} value={`${summary.totalRounds}`} />
+          <Stat
+            styles={styles}
+            label={t('stats.rounds')}
+            value={`${summary.totalRounds}`}
+            hint={
+              summary.completionPct === null
+                ? undefined
+                : `${summary.completionPct}% ${t('stats.ofPlanned')}`
+            }
+          />
+        </View>
+
+        <View style={styles.trendRow}>
+          <Text style={styles.trendLabel}>
+            {t(`stats.vs.${period}` as StringKey)} · {t('stats.activeTime')}
+          </Text>
+          {workDelta === null ? (
+            <Text style={styles.trendMuted}>{t('stats.noBaseline')}</Text>
+          ) : (
+            <Text style={[styles.trendValue, workDelta < 0 && styles.trendDown]}>
+              {workDelta >= 0 ? '+' : ''}
+              {workDelta}%
+            </Text>
+          )}
         </View>
 
         <View style={styles.streakCard}>
           <Text style={styles.streakValue}>🔥 {streak}</Text>
-          <Text style={styles.streakLabel}>{t('stats.streak')}</Text>
+          <Text style={styles.streakLabel}>
+            {t('stats.streak')}
+            <Text style={styles.statHint}>
+              {'  '}
+              {t('stats.bestStreak')} {bestStreak}
+            </Text>
+          </Text>
         </View>
 
         <Text style={styles.sectionTitle}>
@@ -151,6 +189,32 @@ const makeStyles = (c: Palette, f: FontScale) =>
     statHint: {
       color: c.muted,
       fontSize: f.micro,
+    },
+    trendRow: {
+      alignItems: 'center',
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginTop: spacing.sm,
+      paddingHorizontal: spacing.xs,
+    },
+    trendLabel: {
+      color: c.muted,
+      fontSize: f.small,
+      fontWeight: '700',
+      letterSpacing: 1,
+    },
+    trendValue: {
+      color: c.rest,
+      fontSize: f.small,
+      fontWeight: '800',
+    },
+    trendDown: {
+      color: c.muted,
+    },
+    trendMuted: {
+      color: c.muted,
+      fontSize: f.small,
+      fontWeight: '700',
     },
     streakCard: {
       alignItems: 'center',
