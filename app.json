@@ -33,13 +33,6 @@
     "plugins": [
       "expo-audio",
       [
-        "@kingstinct/react-native-healthkit",
-        {
-          "NSHealthShareUsageDescription": "HIIT Timer reads your heart rate from Apple Health to show it in your workout stats.",
-          "NSHealthUpdateUsageDescription": false
-        }
-      ],
-      [
         "expo-image-picker",
         {
           "photosPermission": "HIIT Timer uses the photos you pick to set a custom backdrop for the timer screens."

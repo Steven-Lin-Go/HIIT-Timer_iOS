@@ -1,11 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useMemo, useState } from 'react';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { BarChart } from '../components/BarChart';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { useT } from '../i18n/useT';
 import { formatDuration } from '../lib/format';
-import { useHeartRateStore } from '../stores/heartRateStore';
 import { useHistoryStore } from '../stores/historyStore';
 import {
   currentStreakDays,
@@ -19,15 +18,10 @@ import { useFont } from '../theme/useFont';
 import type { Palette } from '../theme/palettes';
 import { radius, spacing, type FontScale } from '../theme/fitness';
 
-// Screen 5: stats dashboard. All figures are derived from real workout history;
-// heart rate is read from HealthKit.
+// Screen 5: stats dashboard. Every figure is derived from real workout history.
 export function StatsScreen() {
   const [period, setPeriod] = useState<StatsPeriod>('week');
   const entries = useHistoryStore((s) => s.entries);
-  const hrStatus = useHeartRateStore((s) => s.status);
-  const hrStats = useHeartRateStore((s) => s.stats);
-  const hrConnect = useHeartRateStore((s) => s.connect);
-  const hrLoad = useHeartRateStore((s) => s.load);
   const c = useTheme();
   const f = useFont();
   const t = useT();
@@ -37,16 +31,6 @@ export function StatsScreen() {
   const summary = summarize(scoped);
   const streak = currentStreakDays(entries);
   const buckets = chartBuckets(entries, period);
-
-  // Reload heart rate on period change ONLY if already connected. Don't auto-load
-  // on first mount: that would skip the "Connect Apple Health" step (querying
-  // before authorization hangs on "Loading…"). Status is read at call time, not
-  // as a dependency, to avoid a loading→ready refetch loop.
-  useEffect(() => {
-    if (useHeartRateStore.getState().status === 'ready') {
-      hrLoad(period);
-    }
-  }, [period, hrLoad]);
 
   return (
     <View style={styles.container}>
@@ -75,38 +59,6 @@ export function StatsScreen() {
         <View style={styles.streakCard}>
           <Text style={styles.streakValue}>🔥 {streak}</Text>
           <Text style={styles.streakLabel}>{t('stats.streak')}</Text>
-        </View>
-
-        <Text style={styles.sectionTitle}>{t('stats.heartRate')}</Text>
-        <View style={styles.chartCard}>
-          {hrStatus === 'unavailable' ? (
-            <Text style={styles.hrNote}>{t('stats.hrUnavailable')}</Text>
-          ) : hrStatus === 'denied' ? (
-            <Text style={styles.hrNote}>{t('stats.hrDenied')}</Text>
-          ) : hrStatus === 'idle' ? (
-            <Pressable
-              onPress={() => hrConnect().then(() => hrLoad(period))}
-              style={({ pressed }) => [styles.hrBtn, pressed && styles.pressed]}
-            >
-              <Text style={styles.hrBtnText}>{t('stats.hrConnect')}</Text>
-            </Pressable>
-          ) : hrStatus === 'loading' ? (
-            <Text style={styles.hrNote}>{t('stats.loading')}</Text>
-          ) : hrStats.avg === 0 && hrStats.max === 0 ? (
-            <Text style={styles.hrNote}>{t('stats.hrNoData')}</Text>
-          ) : (
-            <View style={styles.hrRow}>
-              <View style={styles.hrStat}>
-                <Text style={styles.hrValue}>{hrStats.avg}</Text>
-                <Text style={styles.hrLabel}>{t('stats.avgBpm')}</Text>
-              </View>
-              <View style={styles.hrDivider} />
-              <View style={styles.hrStat}>
-                <Text style={styles.hrValue}>{hrStats.max}</Text>
-                <Text style={styles.hrLabel}>{t('stats.maxBpm')}</Text>
-              </View>
-            </View>
-          )}
         </View>
 
         <Text style={styles.sectionTitle}>
@@ -237,47 +189,4 @@ const makeStyles = (c: Palette, f: FontScale) =>
       marginTop: spacing.lg,
       textAlign: 'center',
     },
-    hrNote: {
-      color: c.muted,
-      fontSize: f.small,
-      textAlign: 'center',
-    },
-    hrBtn: {
-      alignItems: 'center',
-      backgroundColor: c.work,
-      borderRadius: radius.md,
-      paddingVertical: 12,
-    },
-    hrBtnText: {
-      color: c.text,
-      fontSize: f.small,
-      fontWeight: '800',
-      letterSpacing: 1.5,
-    },
-    hrRow: {
-      alignItems: 'center',
-      flexDirection: 'row',
-    },
-    hrStat: {
-      alignItems: 'center',
-      flex: 1,
-    },
-    hrValue: {
-      color: c.work,
-      fontSize: f.h1,
-      fontWeight: '800',
-    },
-    hrLabel: {
-      color: c.muted,
-      fontSize: f.small,
-      fontWeight: '700',
-      letterSpacing: 1.5,
-      marginTop: 2,
-    },
-    hrDivider: {
-      backgroundColor: c.border,
-      height: 40,
-      width: 1,
-    },
-    pressed: { opacity: 0.85 },
   });

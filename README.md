@@ -64,7 +64,7 @@ The heavy setup is already done and stored remotely, so a second computer does
 | Distribution certificate + provisioning profile | EAS servers (remote credentials) |
 | Registered test iPhone (UDID) | Apple account, not the machine |
 | Project link (`owner`, `extra.eas.projectId`) | `app.json`, tracked in git |
-| HealthKit capability, bundle identifier | Apple Developer portal |
+| Bundle identifier | Apple Developer portal |
 
 On a fresh machine (needs Node + Git installed):
 
