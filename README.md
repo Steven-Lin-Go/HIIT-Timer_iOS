@@ -39,8 +39,8 @@ Windows cannot run Apple's iOS Simulator. During development, use an iPhone with
 - [x] Default session loaded automatically on app launch
 - [x] Responsive portrait and landscape layouts that switch automatically on rotation
 - [x] Adaptive iPad portrait and landscape layouts
-- [ ] Persist workout history or session state between launches
-- [ ] Link the app to a real iPhone preview or EAS preview build
+- [x] Persist workout history or session state between launches
+- [x] Link the app to a real iPhone preview or EAS preview build
 
 ## Local setup
 
@@ -104,6 +104,18 @@ npm run stage1:preflight
 ```
 
 After EAS initialization, confirm that `app.json` contains the real `extra.eas.projectId`. Add an Expo personal access token to the GitHub repository secret named `EXPO_TOKEN`.
+
+## Dependency advisories
+
+`npm audit` reports moderate advisories against `@expo/cli`, `@expo/config-plugins`,
+`xcode` and `uuid`. These are left in place deliberately:
+
+- The whole chain is Expo build tooling. None of it is bundled into the app.
+- npm's only offered remedy is downgrading `expo` to 46.0.21, eleven SDK versions
+  back from the 57 this project targets.
+
+Do not run `npm audit fix --force` here. Re-check when Expo ships an SDK that
+bumps `@expo/config-plugins` past the affected `xcode`/`uuid` releases.
 
 ## CI behavior
 

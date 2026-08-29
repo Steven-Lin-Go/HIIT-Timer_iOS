@@ -87,7 +87,6 @@ const en = {
   'settings.theme': 'Theme',
   'settings.bodyWeight': 'Body Weight',
   'settings.clearHistory': 'Clear Workout History',
-  'settings.version': 'HIIT Timer · v1.0.0',
 
   'settings.group.background': 'BACKDROP',
   'settings.background': 'Custom Image',
@@ -197,7 +196,6 @@ const zh: Record<StringKey, string> = {
   'settings.theme': '主題',
   'settings.bodyWeight': '體重',
   'settings.clearHistory': '清除訓練紀錄',
-  'settings.version': 'HIIT Timer · v1.0.0',
 
   'settings.group.background': '底圖',
   'settings.background': '自訂底圖',

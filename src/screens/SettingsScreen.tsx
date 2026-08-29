@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Alert, Image, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
 
+import appConfig from '../../app.json';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { ThemeMotif } from '../components/ThemeMotif';
 import { useT } from '../i18n/useT';
@@ -14,6 +15,9 @@ import { useFont } from '../theme/useFont';
 import type { Palette } from '../theme/palettes';
 import { radius, spacing, type FontScale } from '../theme/fitness';
 import type { BackgroundLevel } from '../types';
+
+// Read from app.json so the footer cannot drift from the shipped version.
+const APP_VERSION = appConfig.expo.version;
 
 const THEMES: ThemeName[] = ['fitness', 'bohemia', 'zen', 'ikea'];
 const LEVELS: BackgroundLevel[] = ['subtle', 'medium', 'bold'];
@@ -191,7 +195,7 @@ export function SettingsScreen() {
           </Pressable>
         </View>
 
-        <Text style={styles.version}>{t('settings.version')}</Text>
+        <Text style={styles.version}>HIIT Timer · v{APP_VERSION}</Text>
       </ScrollView>
     </View>
   );
