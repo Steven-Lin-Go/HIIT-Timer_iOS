@@ -175,7 +175,7 @@ const makeStyles = (c: Palette, f: FontScale) =>
     },
     upNextLabel: {
       color: c.muted,
-      fontSize: f.small,
+      fontSize: f.timerLabel,
       fontWeight: '700',
       letterSpacing: 1.5,
     },

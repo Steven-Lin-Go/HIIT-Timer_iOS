@@ -204,7 +204,7 @@ const makeStyles = (c: Palette, f: FontScale) =>
       borderRadius: radius.xl,
     },
     phase: {
-      fontSize: f.small,
+      fontSize: f.timerLabel,
       fontWeight: '800',
       letterSpacing: 2,
     },
