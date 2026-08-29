@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
 import { speechLocale, voicePhrase } from '../src/lib/voice.ts';
+import { interpolate } from '../src/i18n/interpolate.ts';
 
 test('voicePhrase returns Traditional Chinese phrases', () => {
   assert.equal(voicePhrase('work', 'zh-TW'), '開始');
@@ -25,4 +26,17 @@ test('every phase has a phrase in both languages', () => {
 test('speechLocale maps to BCP-47 tags', () => {
   assert.equal(speechLocale['zh-TW'], 'zh-TW');
   assert.equal(speechLocale.en, 'en-US');
+});
+
+test('interpolate substitutes named placeholders', () => {
+  assert.equal(interpolate('Cleared {count} workouts.', { count: 12 }), 'Cleared 12 workouts.');
+  assert.equal(interpolate('已清除 {count} 筆訓練紀錄。', { count: 0 }), '已清除 0 筆訓練紀錄。');
+});
+
+test('interpolate leaves a template alone when nothing is passed', () => {
+  assert.equal(interpolate('Cleared {count} workouts.'), 'Cleared {count} workouts.');
+});
+
+test('interpolate keeps a placeholder that has no value, rather than blanking it', () => {
+  assert.equal(interpolate('{a} and {b}', { a: 'one' }), 'one and {b}');
 });

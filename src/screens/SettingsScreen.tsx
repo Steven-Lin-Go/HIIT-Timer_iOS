@@ -29,6 +29,7 @@ export function SettingsScreen() {
   const update = useSettingsStore((s) => s.update);
   const closeSettings = useNavStore((s) => s.closeSettings);
   const clearHistory = useHistoryStore((s) => s.clear);
+  const historyCount = useHistoryStore((s) => s.entries.length);
   const c = useTheme();
   const f = useFont();
   const t = useT();
@@ -50,6 +51,27 @@ export function SettingsScreen() {
     } else if (result.status === 'failed') {
       Alert.alert(t('settings.background'), t('settings.backgroundFailed'));
     }
+  };
+
+  // Deleting history cannot be undone and the control sits in an ordinary
+  // settings row, so it asks first and then says what it removed.
+  const confirmClearHistory = () => {
+    if (historyCount === 0) {
+      Alert.alert(t('settings.clearHistory'), t('settings.clearNone'));
+      return;
+    }
+    const count = historyCount;
+    Alert.alert(t('settings.clearHistory'), t('settings.clearConfirm'), [
+      { text: t('common.cancel'), style: 'cancel' },
+      {
+        text: t('settings.clearAction'),
+        style: 'destructive',
+        onPress: () => {
+          clearHistory();
+          Alert.alert(t('settings.clearHistory'), t('settings.clearDone', { count }));
+        },
+      },
+    ]);
   };
 
   const removeBackground = () => {
@@ -179,7 +201,7 @@ export function SettingsScreen() {
 
         <Text style={styles.group}>{t('settings.group.data')}</Text>
         <View style={styles.card}>
-          <Pressable style={[styles.row, styles.last]} onPress={clearHistory}>
+          <Pressable style={[styles.row, styles.last]} onPress={confirmClearHistory}>
             <Text style={[styles.rowLabel, { color: c.danger }]}>{t('settings.clearHistory')}</Text>
           </Pressable>
         </View>
