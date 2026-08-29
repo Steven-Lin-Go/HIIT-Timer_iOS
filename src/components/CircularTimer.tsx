@@ -115,7 +115,9 @@ export function CircularTimer({
       <View style={styles.center}>
         <View style={[styles.readout, plate && styles.plate]}>
           <Text style={[styles.phase, { color: accent }]}>{phaseLabel}</Text>
-          <Text style={styles.time}>{time}</Text>
+          <Text style={[styles.time, { fontSize: Math.min(f.timer, Math.round((size / 280) * f.timer)) }]}>
+            {time}
+          </Text>
           {subLabel ? <Text style={styles.sub}>{subLabel}</Text> : null}
         </View>
       </View>

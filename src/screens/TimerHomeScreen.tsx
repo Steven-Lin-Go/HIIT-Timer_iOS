@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 
 import { useHasPhotoBackdrop } from '../components/AppBackdrop';
 import { CircularTimer } from '../components/CircularTimer';
@@ -29,6 +29,12 @@ export function TimerHomeScreen() {
   // has to compete with whatever the user picked.
   const onPhoto = useHasPhotoBackdrop(true);
 
+  // The ring is the only fixed-height element here, so on shorter screens it
+  // has to give way -- otherwise the centred body overflows and rides over the
+  // START button below it.
+  const { height, width } = useWindowDimensions();
+  const ringSize = Math.max(190, Math.min(280, width - 96, height * 0.3));
+
   const start = () => {
     startTimer();
     setTimerScreen('run');
@@ -46,6 +52,7 @@ export function TimerHomeScreen() {
           accent={phaseAccent(c, 'work')}
           subLabel={`1 / ${session?.rounds ?? 0} ${t('round')}`}
           plate={onPhoto}
+          size={ringSize}
         />
 
         <View style={[styles.upNext, onPhoto && styles.plate]}>
@@ -91,18 +98,18 @@ const makeStyles = (c: Palette, f: FontScale) =>
     body: {
       alignItems: 'center',
       flex: 1,
+      gap: spacing.md,
       justifyContent: 'center',
+      paddingBottom: spacing.sm,
     },
     status: {
       color: c.rest,
       fontSize: f.small,
       fontWeight: '800',
       letterSpacing: 1.5,
-      marginBottom: spacing.xl,
     },
     upNext: {
       alignItems: 'center',
-      marginTop: spacing.xl,
     },
     upNextLabel: {
       color: c.muted,
@@ -121,12 +128,12 @@ const makeStyles = (c: Palette, f: FontScale) =>
       fontSize: f.body,
       fontWeight: '700',
       letterSpacing: 1,
-      marginTop: spacing.lg,
     },
     actions: {
       gap: spacing.sm,
       paddingBottom: spacing.md,
       paddingHorizontal: spacing.lg,
+      paddingTop: spacing.md,
     },
     startBtn: {
       alignItems: 'center',
