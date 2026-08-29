@@ -21,8 +21,16 @@ export function BarChart({ buckets, height = 140 }: Props) {
   const max = Math.max(1, ...buckets.map((b) => b.totalSec));
   // Label every column where there is room. Denser charts are thinned out
   // counting back from the newest bucket, so the right edge -- the one the
-  // reader anchors on -- always carries a label.
+  // reader anchors on -- always carries a label. Both ends are always labelled
+  // so the span of the axis is readable without counting columns.
   const labelStep = buckets.length <= 12 ? 1 : 5;
+  const showLabel = (i: number): boolean => {
+    const last = buckets.length - 1;
+    if (i === 0 || i === last) return true;
+    // Only thinned axes risk crowding the left edge label with its neighbour.
+    if (labelStep > 1 && i < 2) return false;
+    return (last - i) % labelStep === 0;
+  };
 
   return (
     <View style={[styles.wrap, { height }]}>
@@ -39,7 +47,7 @@ export function BarChart({ buckets, height = 140 }: Props) {
                 },
               ]}
             />
-            {(buckets.length - 1 - i) % labelStep === 0 ? (
+            {showLabel(i) ? (
               <Text style={styles.label} numberOfLines={1}>
                 {b.label}
               </Text>
