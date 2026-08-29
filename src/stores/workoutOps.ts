@@ -79,6 +79,27 @@ const makeId = () => `w-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
 
 // Pure CRUD reducers over the custom-workout list, so they can be unit-tested
 // without a running store.
+/**
+ * Applies a stored id order to the presets defined in code.
+ *
+ * Only the order is persisted, never the presets themselves, so a later version
+ * can add, fix or drop a built-in workout and every install picks it up. Ids no
+ * longer in code are ignored, and presets missing from a stored order are
+ * appended, so a preset added later still shows up for someone who has already
+ * arranged their list.
+ */
+export const orderPresets = (
+  presets: WorkoutSession[],
+  order: readonly string[],
+): WorkoutSession[] => {
+  const byId = new Map(presets.map((p) => [p.id, p]));
+  const ordered = order
+    .map((id) => byId.get(id))
+    .filter((p): p is WorkoutSession => p !== undefined);
+  const placed = new Set(ordered.map((p) => p.id));
+  return [...ordered, ...presets.filter((p) => !placed.has(p.id))];
+};
+
 // Swap an entry with its neighbour. Out-of-range moves return the list
 // unchanged, so the caller can wire up buttons without guarding the ends.
 export const moveWorkout = (

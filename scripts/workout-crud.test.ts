@@ -6,6 +6,7 @@ import {
   addWorkout,
   deleteWorkout,
   moveWorkout,
+  orderPresets,
   updateWorkout,
   type WorkoutDraft,
 } from '../src/stores/workoutOps.ts';
@@ -78,4 +79,35 @@ test('moveWorkout does not mutate the list it is given', () => {
   ];
   moveWorkout(list, 'a', 'down');
   assert.deepEqual(list.map((w) => w.id), ['a', 'b']);
+});
+
+test('orderPresets arranges code presets by a stored id order', () => {
+  const presets = [session('a'), session('b'), session('c')];
+  assert.deepEqual(
+    orderPresets(presets, ['c', 'a', 'b']).map((w) => w.id),
+    ['c', 'a', 'b'],
+  );
+});
+
+test('orderPresets appends presets the stored order has never seen', () => {
+  // 'd' ships in a later version, after the user already arranged the list.
+  const presets = [session('a'), session('b'), session('d')];
+  assert.deepEqual(
+    orderPresets(presets, ['b', 'a']).map((w) => w.id),
+    ['b', 'a', 'd'],
+  );
+});
+
+test('orderPresets ignores ids no longer defined in code', () => {
+  // 'gone' was removed from the app; the stored order still mentions it.
+  const presets = [session('a'), session('b')];
+  assert.deepEqual(
+    orderPresets(presets, ['gone', 'b', 'a']).map((w) => w.id),
+    ['b', 'a'],
+  );
+});
+
+test('orderPresets with no stored order keeps the order defined in code', () => {
+  const presets = [session('a'), session('b')];
+  assert.deepEqual(orderPresets(presets, []).map((w) => w.id), ['a', 'b']);
 });
