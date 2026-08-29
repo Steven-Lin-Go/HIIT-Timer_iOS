@@ -33,7 +33,7 @@ export function BarChart({ buckets, height = 140 }: Props) {
   };
 
   return (
-    <View style={[styles.wrap, { height }]}>
+    <View style={[styles.wrap, { gap: labelStep > 1 ? 2 : 4, height }]}>
       {buckets.map((b, i) => {
         const h = Math.round((b.totalSec / max) * (height - 22));
         return (
@@ -48,7 +48,7 @@ export function BarChart({ buckets, height = 140 }: Props) {
               ]}
             />
             {showLabel(i) ? (
-              <Text style={styles.label} numberOfLines={1}>
+              <Text style={[styles.label, labelStep > 1 && styles.labelWide]} numberOfLines={1}>
                 {b.label}
               </Text>
             ) : (
@@ -66,7 +66,6 @@ const makeStyles = (c: Palette, f: FontScale) =>
     wrap: {
       alignItems: 'flex-end',
       flexDirection: 'row',
-      gap: 4,
       justifyContent: 'space-between',
     },
     col: {
@@ -82,5 +81,12 @@ const makeStyles = (c: Palette, f: FontScale) =>
       color: c.muted,
       fontSize: f.micro,
       marginTop: 6,
+    },
+    // Overflows its column on purpose; the neighbouring columns are blank
+    // whenever the axis is thinned, and the spacing between labelled columns
+    // is far wider than this.
+    labelWide: {
+      textAlign: 'center',
+      width: 28,
     },
   });
