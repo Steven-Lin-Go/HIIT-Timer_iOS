@@ -96,11 +96,7 @@ export function StatsScreen() {
         <View style={styles.streakCard}>
           <Text style={styles.streakValue}>🔥 {streak}</Text>
           <Text style={styles.streakLabel}>
-            {t('stats.streak')}
-            <Text style={styles.statHint}>
-              {'  '}
-              {t('stats.bestStreak')} {bestStreak}
-            </Text>
+            {t('stats.streak')} - {t('stats.bestStreak', { days: bestStreak })}
           </Text>
         </View>
 
