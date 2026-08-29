@@ -115,9 +115,9 @@ test('chartBuckets returns 12 calendar months for year, oldest first', () => {
     now,
   );
   assert.equal(buckets.length, 12);
-  assert.equal(buckets[11]!.label, 'AUG'); // current month is the last column
+  assert.equal(buckets[11]!.label, '8'); // current month is the last column
   assert.equal(buckets[11]!.totalSec, 500); // both August entries summed
-  assert.equal(buckets[0]!.label, 'SEP'); // 11 months back, previous year
+  assert.equal(buckets[0]!.label, '9'); // 11 months back, previous year
   assert.equal(buckets[0]!.key, '2025-09');
   assert.equal(buckets[0]!.totalSec, 600);
 });

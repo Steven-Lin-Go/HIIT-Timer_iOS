@@ -86,11 +86,6 @@ export interface ChartBucket {
 }
 
 const WEEKDAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
-const MONTHS = [
-  'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
-  'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC',
-];
-
 // Local YYYY-MM key, matching dayKey's calendar-local grouping.
 const monthKey = (date: Date): string =>
   `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
@@ -98,7 +93,7 @@ const monthKey = (date: Date): string =>
 /**
  * Chart columns for the trailing window, oldest first, at a granularity that
  * matches the period: seven days for a week, thirty for a month, and twelve
- * calendar months for a year. Empty buckets are included so the columns stay
+ * calendar months for a year, labelled by month number. Empty buckets are included so the columns stay
  * evenly spaced and the axis reads continuously.
  */
 export const chartBuckets = (
@@ -119,7 +114,10 @@ export const chartBuckets = (
       // negative month index into the previous year.
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const k = monthKey(d);
-      buckets.push({ key: k, label: MONTHS[d.getMonth()]!, totalSec: byMonth.get(k) ?? 0 });
+      // Month number rather than a name: twelve columns leave no room for
+      // a three-letter abbreviation, which truncated to 'JU.' and similar.
+      const label = (d.getMonth() + 1).toString();
+      buckets.push({ key: k, label, totalSec: byMonth.get(k) ?? 0 });
     }
     return buckets;
   }
