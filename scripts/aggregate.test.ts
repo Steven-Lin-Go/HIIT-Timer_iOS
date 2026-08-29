@@ -5,6 +5,7 @@ import type { HistoryEntry } from '../src/types';
 import {
   currentStreakDays,
   chartBuckets,
+  minutesAxis,
   estimateCalories,
   filterByPeriod,
   summarize,
@@ -119,4 +120,20 @@ test('chartBuckets returns 12 calendar months for year, oldest first', () => {
   assert.equal(buckets[0]!.label, 'SEP'); // 11 months back, previous year
   assert.equal(buckets[0]!.key, '2025-09');
   assert.equal(buckets[0]!.totalSec, 600);
+});
+
+test('minutesAxis scales the y-axis to the tallest bar', () => {
+  // 53 minutes -> 0/20/40/60, the scale the mockups use.
+  assert.deepEqual(minutesAxis(53 * 60), { max: 60, step: 20 });
+  assert.deepEqual(minutesAxis(8 * 60), { max: 8, step: 2 });
+  assert.deepEqual(minutesAxis(12 * 60), { max: 15, step: 5 });
+  assert.deepEqual(minutesAxis(240 * 60), { max: 300, step: 100 });
+});
+
+test('minutesAxis keeps whole-minute steps and handles an empty period', () => {
+  assert.deepEqual(minutesAxis(0), { max: 10, step: 5 }); // nothing logged
+  assert.deepEqual(minutesAxis(30), { max: 1, step: 1 }); // half a minute
+  const { max, step } = minutesAxis(3 * 60);
+  assert.equal(step, 1);
+  assert.equal(max % step, 0);
 });

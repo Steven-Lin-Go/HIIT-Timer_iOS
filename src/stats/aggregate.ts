@@ -145,3 +145,24 @@ export const chartBuckets = (
   }
   return buckets;
 };
+
+/**
+ * A readable y-axis in whole minutes for the workout-time chart.
+ *
+ * The top of the axis is the smallest multiple of a 1/2/5-family step that
+ * clears the tallest bar, so the scale follows the data in the selected period
+ * rather than being fixed. Steps are never fractional -- a half-minute day
+ * still gets a 0..1 axis rather than 0.2 tick marks.
+ */
+export const minutesAxis = (maxSeconds: number): { max: number; step: number } => {
+  const maxMinutes = Math.max(0, maxSeconds) / 60;
+  if (maxMinutes <= 0) return { max: 10, step: 5 }; // nothing logged yet
+
+  const rough = maxMinutes / 4; // aim for roughly four intervals
+  const magnitude = 10 ** Math.floor(Math.log10(rough));
+  const normalised = rough / magnitude;
+  const nice = normalised <= 1 ? 1 : normalised <= 2 ? 2 : normalised <= 5 ? 5 : 10;
+  const step = Math.max(1, Math.round(nice * magnitude));
+
+  return { max: Math.ceil(maxMinutes / step) * step, step };
+};

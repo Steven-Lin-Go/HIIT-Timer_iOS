@@ -109,7 +109,9 @@ export function StatsScreen() {
           )}
         </View>
 
-        <Text style={styles.sectionTitle}>{t('stats.workoutTime')}</Text>
+        <Text style={styles.sectionTitle}>
+          {t('stats.workoutTime')} ({t('stats.minutes')})
+        </Text>
         <View style={styles.chartCard}>
           <BarChart buckets={buckets} />
         </View>
