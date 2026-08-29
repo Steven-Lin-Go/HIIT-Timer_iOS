@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import type { HistoryEntry } from '../src/types';
 import {
   currentStreakDays,
-  dailyBuckets,
+  chartBuckets,
   estimateCalories,
   filterByPeriod,
   summarize,
@@ -81,9 +81,9 @@ test('streak is zero with no entries', () => {
   assert.equal(currentStreakDays([], new Date('2026-08-25')), 0);
 });
 
-test('dailyBuckets returns 7 ordered days for week and sums per day', () => {
+test('chartBuckets returns 7 ordered days for week and sums per day', () => {
   const now = new Date('2026-08-25T12:00:00');
-  const buckets = dailyBuckets(
+  const buckets = chartBuckets(
     [entry('2026-08-25T08:00:00', 300), entry('2026-08-25T09:00:00', 200)],
     'week',
     now,
@@ -91,4 +91,32 @@ test('dailyBuckets returns 7 ordered days for week and sums per day', () => {
   assert.equal(buckets.length, 7);
   assert.equal(buckets[6]!.totalSec, 500); // today is the last bucket
   assert.equal(buckets[0]!.totalSec, 0);
+});
+
+test('chartBuckets returns 30 day-of-month columns for month', () => {
+  const now = new Date('2026-08-25T12:00:00');
+  const buckets = chartBuckets([entry('2026-08-25T08:00:00', 300)], 'month', now);
+  assert.equal(buckets.length, 30);
+  assert.equal(buckets[29]!.label, '25'); // today is the last column
+  assert.equal(buckets[29]!.totalSec, 300);
+  assert.equal(buckets[0]!.label, '27'); // 29 days back lands in July
+});
+
+test('chartBuckets returns 12 calendar months for year, oldest first', () => {
+  const now = new Date('2026-08-25T12:00:00');
+  const buckets = chartBuckets(
+    [
+      entry('2026-08-02T08:00:00', 300),
+      entry('2026-08-20T08:00:00', 200),
+      entry('2025-09-15T08:00:00', 600),
+    ],
+    'year',
+    now,
+  );
+  assert.equal(buckets.length, 12);
+  assert.equal(buckets[11]!.label, 'AUG'); // current month is the last column
+  assert.equal(buckets[11]!.totalSec, 500); // both August entries summed
+  assert.equal(buckets[0]!.label, 'SEP'); // 11 months back, previous year
+  assert.equal(buckets[0]!.key, '2025-09');
+  assert.equal(buckets[0]!.totalSec, 600);
 });

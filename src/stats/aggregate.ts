@@ -79,19 +79,51 @@ export const currentStreakDays = (
   return streak;
 };
 
-export interface DailyBucket {
-  key: string; // YYYY-MM-DD
-  label: string; // weekday / day-of-month label for the chart
+export interface ChartBucket {
+  key: string; // YYYY-MM-DD for daily buckets, YYYY-MM for monthly ones
+  label: string;
   totalSec: number;
 }
 
-// One bucket per day for the trailing window (7 for week, else capped at 30),
-// oldest first, so a bar chart can render fixed-width columns.
-export const dailyBuckets = (
+const WEEKDAYS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+const MONTHS = [
+  'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
+  'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC',
+];
+
+// Local YYYY-MM key, matching dayKey's calendar-local grouping.
+const monthKey = (date: Date): string =>
+  `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+
+/**
+ * Chart columns for the trailing window, oldest first, at a granularity that
+ * matches the period: seven days for a week, thirty for a month, and twelve
+ * calendar months for a year. Empty buckets are included so the columns stay
+ * evenly spaced and the axis reads continuously.
+ */
+export const chartBuckets = (
   entries: HistoryEntry[],
   period: StatsPeriod,
   now: Date = new Date(),
-): DailyBucket[] => {
+): ChartBucket[] => {
+  if (period === 'year') {
+    const byMonth = new Map<string, number>();
+    for (const e of entries) {
+      const k = monthKey(new Date(e.completedAt));
+      byMonth.set(k, (byMonth.get(k) ?? 0) + e.totalDuration);
+    }
+
+    const buckets: ChartBucket[] = [];
+    for (let i = 11; i >= 0; i -= 1) {
+      // Day 1 of the month i months back; the Date constructor normalises a
+      // negative month index into the previous year.
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const k = monthKey(d);
+      buckets.push({ key: k, label: MONTHS[d.getMonth()]!, totalSec: byMonth.get(k) ?? 0 });
+    }
+    return buckets;
+  }
+
   const span = period === 'week' ? 7 : 30;
   const byDay = new Map<string, number>();
   for (const e of entries) {
@@ -99,7 +131,7 @@ export const dailyBuckets = (
     byDay.set(k, (byDay.get(k) ?? 0) + e.totalDuration);
   }
 
-  const buckets: DailyBucket[] = [];
+  const buckets: ChartBucket[] = [];
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   for (let i = span - 1; i >= 0; i -= 1) {
     const d = new Date(today);
@@ -107,10 +139,7 @@ export const dailyBuckets = (
     const k = dayKey(d);
     buckets.push({
       key: k,
-      label:
-        period === 'week'
-          ? ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'][d.getDay()]!
-          : d.getDate().toString(),
+      label: period === 'week' ? WEEKDAYS[d.getDay()]! : d.getDate().toString(),
       totalSec: byDay.get(k) ?? 0,
     });
   }

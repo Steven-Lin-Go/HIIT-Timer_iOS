@@ -9,7 +9,7 @@ import { useHeartRateStore } from '../stores/heartRateStore';
 import { useHistoryStore } from '../stores/historyStore';
 import {
   currentStreakDays,
-  dailyBuckets,
+  chartBuckets,
   filterByPeriod,
   summarize,
   type StatsPeriod,
@@ -36,7 +36,7 @@ export function StatsScreen() {
   const scoped = filterByPeriod(entries, period);
   const summary = summarize(scoped);
   const streak = currentStreakDays(entries);
-  const buckets = dailyBuckets(entries, period);
+  const buckets = chartBuckets(entries, period);
 
   // Reload heart rate on period change ONLY if already connected. Don't auto-load
   // on first mount: that would skip the "Connect Apple Health" step (querying

@@ -5,10 +5,10 @@ import { useTheme } from '../theme/useTheme';
 import { useFont } from '../theme/useFont';
 import type { Palette } from '../theme/palettes';
 import type { FontScale } from '../theme/fitness';
-import type { DailyBucket } from '../stats/aggregate';
+import type { ChartBucket } from '../stats/aggregate';
 
 interface Props {
-  buckets: DailyBucket[];
+  buckets: ChartBucket[];
   height?: number;
 }
 
@@ -19,6 +19,10 @@ export function BarChart({ buckets, height = 140 }: Props) {
   const f = useFont();
   const styles = useMemo(() => makeStyles(c, f), [c, f]);
   const max = Math.max(1, ...buckets.map((b) => b.totalSec));
+  // Label every column where there is room. Denser charts are thinned out
+  // counting back from the newest bucket, so the right edge -- the one the
+  // reader anchors on -- always carries a label.
+  const labelStep = buckets.length <= 12 ? 1 : 5;
 
   return (
     <View style={[styles.wrap, { height }]}>
@@ -35,8 +39,7 @@ export function BarChart({ buckets, height = 140 }: Props) {
                 },
               ]}
             />
-            {/* For month view (30 bars) only label every 5th to avoid clutter. */}
-            {buckets.length <= 7 || i % 5 === 0 ? (
+            {(buckets.length - 1 - i) % labelStep === 0 ? (
               <Text style={styles.label} numberOfLines={1}>
                 {b.label}
               </Text>
