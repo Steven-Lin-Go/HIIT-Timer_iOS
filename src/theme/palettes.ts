@@ -67,7 +67,7 @@ export const PALETTES: Record<ThemeName, Palette> = {
     scrim: '#050B16',
     plate: 'rgba(5, 11, 22, 0.72)',
   },
-  // 02 Bohemia — warm earth tones, light.
+  // 02 Bohemian — warm earth tones, light.
   bohemia: {
     bg: '#F3E9DC',
     surface: '#EADBC8',

@@ -6,7 +6,7 @@ import { useSettingsStore } from '../stores/settingsStore';
 import { PALETTES, type ThemeName } from '../theme/palettes';
 
 // Decorative vector artwork that gives each theme its character beyond color:
-// the gym-energy diagonals of Fitness, the sun and fronds of Bohemia, the ink
+// the gym-energy diagonals of Fitness, the sun and fronds of Bohemian, the ink
 // landscape of Zen, and the Scandinavian plants of Natural. Drawn in SVG rather
 // than shipped as bitmaps so the artwork re-colors with the palette and costs
 // nothing in bundle size.

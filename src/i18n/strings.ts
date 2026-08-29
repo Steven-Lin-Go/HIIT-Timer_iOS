@@ -114,7 +114,7 @@ const en = {
   'level.bold': 'BOLD',
 
   'theme.fitness': 'Fitness',
-  'theme.bohemia': 'Bohemia',
+  'theme.bohemia': 'Bohemian',
   'theme.zen': 'Zen',
   'theme.ikea': 'Natural',
 };

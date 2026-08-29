@@ -21,7 +21,7 @@ interface Props {
 
 // The ring around the time. Each theme draws it with its own stroke character
 // (see RingStyle in palettes.ts) so the four styles differ in form, not just
-// hue: Fitness is a hard even band, Bohemia a painted double stroke, Zen an
+// hue: Fitness is a hard even band, Bohemian a painted double stroke, Zen an
 // open hand-drawn enso, and Natural a thin track with a rounded head.
 export function CircularTimer({
   time,
@@ -92,7 +92,7 @@ export function CircularTimer({
             strokeLinecap={spec.cap}
             strokeDasharray={`${arc * clamped} ${circumference}`}
           />
-          {/* Bohemia lays a thin inner stroke over the band for a painted edge. */}
+          {/* Bohemian lays a thin inner stroke over the band for a painted edge. */}
           {c.ringStyle === 'brush' ? (
             <Circle
               cx={cx}
