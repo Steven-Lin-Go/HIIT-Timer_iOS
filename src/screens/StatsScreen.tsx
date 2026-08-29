@@ -133,10 +133,8 @@ function Stat({
   return (
     <View style={styles.statCard}>
       <Text style={styles.statValue}>{value}</Text>
-      <Text style={styles.statLabel}>
-        {label}
-        {hint ? <Text style={styles.statHint}> {hint}</Text> : null}
-      </Text>
+      <Text style={styles.statLabel}>{label}</Text>
+      {hint ? <Text style={styles.statHint}>{hint}</Text> : null}
     </View>
   );
 }
@@ -161,6 +159,8 @@ const makeStyles = (c: Palette, f: FontScale) =>
     },
     body: { padding: spacing.lg },
     grid: {
+      // stretch keeps paired cards the same height when only one has a hint.
+      alignItems: 'stretch',
       flexDirection: 'row',
       flexWrap: 'wrap',
       gap: spacing.sm,
@@ -189,6 +189,7 @@ const makeStyles = (c: Palette, f: FontScale) =>
     statHint: {
       color: c.muted,
       fontSize: f.micro,
+      marginTop: 2,
     },
     trendRow: {
       alignItems: 'center',
