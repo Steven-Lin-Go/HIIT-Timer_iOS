@@ -7,6 +7,7 @@ import {
   addWorkout,
   deleteWorkout,
   updateWorkout,
+  moveWorkout,
   WORKOUT_PRESETS,
   type WorkoutDraft,
 } from './workoutOps';
@@ -17,6 +18,7 @@ interface WorkoutStore {
   add: (draft: WorkoutDraft) => void;
   update: (id: string, draft: WorkoutDraft) => void;
   remove: (id: string) => void;
+  move: (list: 'presets' | 'custom', id: string, direction: 'up' | 'down') => void;
   getById: (id: string) => WorkoutSession | undefined;
 }
 
@@ -29,6 +31,12 @@ export const useWorkoutStore = create<WorkoutStore>()(
       update: (id, draft) =>
         set((state) => ({ custom: updateWorkout(state.custom, id, draft) })),
       remove: (id) => set((state) => ({ custom: deleteWorkout(state.custom, id) })),
+      move: (list, id, direction) =>
+        set((state) =>
+          list === 'presets'
+            ? { presets: moveWorkout(state.presets, id, direction) }
+            : { custom: moveWorkout(state.custom, id, direction) },
+        ),
       getById: (id) => {
         const state = get();
         return (

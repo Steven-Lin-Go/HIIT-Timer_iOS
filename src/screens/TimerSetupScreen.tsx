@@ -33,6 +33,7 @@ const detectMode = (d: Pick<WorkoutDraft, 'workTime' | 'restTime' | 'rounds'>): 
 export function TimerSetupScreen() {
   const editingId = useNavStore((s) => s.editingWorkoutId);
   const setTimerScreen = useNavStore((s) => s.setTimerScreen);
+  const setupReturnTo = useNavStore((s) => s.setupReturnTo);
   const setTab = useNavStore((s) => s.setTab);
   const currentSession = useTimerStore((s) => s.currentSession);
   const setSession = useTimerStore((s) => s.setSession);
@@ -79,7 +80,10 @@ export function TimerSetupScreen() {
       addWorkout(draft);
     }
     applyToTimer();
-    setTab('workouts');
+    // Back to whichever list the user came from, rather than always the
+    // workouts tab -- arriving somewhere you never navigated to reads as a bug.
+    setTimerScreen('home');
+    setTab(setupReturnTo);
   };
 
   return (

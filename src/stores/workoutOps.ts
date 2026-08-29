@@ -79,6 +79,25 @@ const makeId = () => `w-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
 
 // Pure CRUD reducers over the custom-workout list, so they can be unit-tested
 // without a running store.
+// Swap an entry with its neighbour. Out-of-range moves return the list
+// unchanged, so the caller can wire up buttons without guarding the ends.
+export const moveWorkout = (
+  list: WorkoutSession[],
+  id: string,
+  direction: 'up' | 'down',
+): WorkoutSession[] => {
+  const index = list.findIndex((w) => w.id === id);
+  const target = direction === 'up' ? index - 1 : index + 1;
+  if (index === -1 || target < 0 || target >= list.length) {
+    return list;
+  }
+  const next = [...list];
+  const moved = next[index]!;
+  next[index] = next[target]!;
+  next[target] = moved;
+  return next;
+};
+
 export const addWorkout = (
   list: WorkoutSession[],
   draft: WorkoutDraft,
