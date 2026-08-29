@@ -22,8 +22,8 @@ const APP_VERSION = appConfig.expo.version;
 const THEMES: ThemeName[] = ['fitness', 'bohemia', 'zen', 'ikea'];
 const LEVELS: BackgroundLevel[] = ['subtle', 'medium', 'bold'];
 
-// Screen 6: settings — sound/haptics/voice, time format, language, theme, body
-// weight, plus data reset. Persisted via settingsStore.
+// Screen 6: settings — sound/haptics/voice, time format, language, theme,
+// plus data reset. Persisted via settingsStore.
 export function SettingsScreen() {
   const settings = useSettingsStore();
   const update = useSettingsStore((s) => s.update);
@@ -96,19 +96,8 @@ export function SettingsScreen() {
             ]}
             value={settings.language}
             onSelect={(v) => update({ language: v as 'zh-TW' | 'en' })}
+            last
           />
-          <View style={[styles.row, styles.last]}>
-            <Text style={styles.rowLabel}>{t('settings.bodyWeight')}</Text>
-            <View style={styles.weight}>
-              <Pressable hitSlop={8} onPress={() => update({ bodyWeightKg: Math.max(30, settings.bodyWeightKg - 1) })}>
-                <Text style={styles.weightBtn}>−</Text>
-              </Pressable>
-              <Text style={styles.weightValue}>{settings.bodyWeightKg} kg</Text>
-              <Pressable hitSlop={8} onPress={() => update({ bodyWeightKg: Math.min(250, settings.bodyWeightKg + 1) })}>
-                <Text style={styles.weightBtn}>+</Text>
-              </Pressable>
-            </View>
-          </View>
         </View>
 
         <Text style={styles.group}>{t('settings.group.appearance')}</Text>
@@ -228,15 +217,17 @@ function Choice({
   options,
   value,
   onSelect,
+  last,
 }: {
   styles: ReturnType<typeof makeStyles>;
   label: string;
   options: { value: string; label: string }[];
   value: string;
   onSelect: (v: string) => void;
+  last?: boolean;
 }) {
   return (
-    <View style={styles.row}>
+    <View style={[styles.row, last && styles.last]}>
       <Text style={styles.rowLabel}>{label}</Text>
       <View style={styles.segment}>
         {options.map((opt) => (
@@ -362,23 +353,6 @@ const makeStyles = (c: Palette, f: FontScale) =>
       fontSize: f.small,
       lineHeight: 19,
       marginTop: spacing.sm,
-    },
-    weight: {
-      alignItems: 'center',
-      flexDirection: 'row',
-      gap: spacing.md,
-    },
-    weightBtn: {
-      color: c.text,
-      fontSize: 22,
-      fontWeight: '800',
-    },
-    weightValue: {
-      color: c.text,
-      fontSize: f.label,
-      fontWeight: '800',
-      minWidth: 60,
-      textAlign: 'center',
     },
     version: {
       color: c.muted,

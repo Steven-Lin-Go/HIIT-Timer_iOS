@@ -49,7 +49,6 @@ export interface AppSettings {
   countdownVoice: boolean;
   language: 'zh-TW' | 'en';
   theme: 'fitness' | 'bohemia' | 'zen' | 'ikea';
-  bodyWeightKg: number; // kg; currently unread since the calorie tile was dropped
   // Optional user-supplied backdrop for the timer screens. Stored as a file://
   // URI inside the app's document directory, so it survives cache eviction.
   backgroundUri: string | null;

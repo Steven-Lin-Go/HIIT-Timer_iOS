@@ -78,7 +78,6 @@ const en = {
   'settings.countdownVoice': 'Countdown Voice',
   'settings.language': 'Language',
   'settings.theme': 'Theme',
-  'settings.bodyWeight': 'Body Weight',
   'settings.clearHistory': 'Clear Workout History',
 
   'settings.group.background': 'BACKDROP',
@@ -180,7 +179,6 @@ const zh: Record<StringKey, string> = {
   'settings.countdownVoice': '語音倒數',
   'settings.language': '語言',
   'settings.theme': '主題',
-  'settings.bodyWeight': '體重',
   'settings.clearHistory': '清除訓練紀錄',
 
   'settings.group.background': '底圖',

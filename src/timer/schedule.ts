@@ -47,11 +47,38 @@ export const buildSchedule = (session: WorkoutSession): Segment[] => {
 export const totalScheduledSeconds = (session: WorkoutSession): number =>
   buildSchedule(session).reduce((sum, segment) => sum + segment.duration, 0);
 
-// Seconds spent in work intervals only, excluding prepare, rest and cooldown.
-// This is the part of a session that is actually training.
-export const totalWorkSeconds = (session: WorkoutSession): number =>
+/**
+ * Rounds whose work segment ends inside (from, to] on the schedule timeline.
+ *
+ * The run screen advances `to` a second at a time, so a round is reported here
+ * only once the clock has actually run through its work segment. A forward skip
+ * moves the play position without passing this range, which is what keeps
+ * skipped rounds out of the history.
+ */
+export const workRoundsCompletedBetween = (
+  session: WorkoutSession,
+  from: number,
+  to: number,
+): number[] => {
+  const rounds: number[] = [];
+  let cursor = 0;
+  for (const segment of buildSchedule(session)) {
+    const end = cursor + segment.duration;
+    if (segment.phase === 'work' && end > from && end <= to) {
+      rounds.push(segment.round);
+    }
+    cursor = end;
+  }
+  return rounds;
+};
+
+// Seconds of work contributed by the given rounds.
+export const workSecondsForRounds = (
+  session: WorkoutSession,
+  rounds: readonly number[],
+): number =>
   buildSchedule(session)
-    .filter((segment) => segment.phase === 'work')
+    .filter((segment) => segment.phase === 'work' && rounds.includes(segment.round))
     .reduce((sum, segment) => sum + segment.duration, 0);
 
 // Cumulative start offset (seconds) of every segment — lets the run screen skip

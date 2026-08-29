@@ -6,7 +6,8 @@ import {
   PREPARE_SECONDS,
   segmentStarts,
   totalScheduledSeconds,
-  totalWorkSeconds,
+  workRoundsCompletedBetween,
+  workSecondsForRounds,
 } from '../timer/schedule';
 import { useHistoryStore } from './historyStore';
 
@@ -17,6 +18,13 @@ interface TimerStore extends TimerState {
   startEpoch: number | null;
   pausedAccumMs: number;
   pauseStartedAt: number | null;
+  // Wall clock when the session began. Unlike startEpoch this is never
+  // re-anchored by a skip, so it measures time the user actually spent.
+  startedAtWall: number | null;
+  // Rounds the clock has run through, and how far along the schedule the last
+  // tick reached. A skip moves the play position without crediting anything.
+  doneRounds: number[];
+  lastPosition: number;
   setSession: (session: WorkoutSession) => void;
   startTimer: () => void;
   pauseTimer: () => void;
@@ -25,17 +33,30 @@ interface TimerStore extends TimerState {
   tick: () => void;
 }
 
-// Write one history entry for a finished session. Shared by tick() and
-// forward-skip completion.
-const recordCompletion = (session: WorkoutSession) => {
+// Write one history entry for a finished session, describing what was actually
+// done rather than what was scheduled: rounds the clock ran through, the work
+// seconds those rounds contain, and elapsed wall time excluding pauses.
+// Shared by tick() and forward-skip completion.
+const recordCompletion = (
+  session: WorkoutSession,
+  doneRounds: number[],
+  elapsedSeconds: number,
+) => {
   useHistoryStore.getState().record({
     sessionId: session.id,
     sessionName: session.name,
-    completedRounds: session.rounds,
-    totalDuration: totalScheduledSeconds(session),
-    workSeconds: totalWorkSeconds(session),
+    completedRounds: doneRounds.length,
+    totalDuration: Math.max(0, Math.round(elapsedSeconds)),
+    workSeconds: workSecondsForRounds(session, doneRounds),
   });
 };
+
+// Seconds the user has been in the session, pauses removed.
+const wallElapsedSeconds = (
+  startedAtWall: number | null,
+  pausedAccumMs: number,
+  now: number,
+): number => (startedAtWall === null ? 0 : (now - startedAtWall - pausedAccumMs) / 1000);
 
 const idleDerived = (session: WorkoutSession | null): TimerState => {
   if (!session) {
@@ -68,6 +89,9 @@ const createInitialState = (session: WorkoutSession | null) => ({
   startEpoch: null,
   pausedAccumMs: 0,
   pauseStartedAt: null,
+  startedAtWall: null,
+  doneRounds: [] as number[],
+  lastPosition: 0,
 });
 
 export const useTimerStore = create<TimerStore>((set, get) => ({
@@ -84,12 +108,16 @@ export const useTimerStore = create<TimerStore>((set, get) => ({
 
     // Fresh start or restart after completion: anchor now.
     if (!state.isRunning || state.isComplete) {
+      const now = Date.now();
       set({
         ...idleDerived(state.currentSession),
         isRunning: true,
-        startEpoch: Date.now(),
+        startEpoch: now,
         pausedAccumMs: 0,
         pauseStartedAt: null,
+        startedAtWall: now,
+        doneRounds: [],
+        lastPosition: 0,
       });
       return;
     }
@@ -156,11 +184,17 @@ export const useTimerStore = create<TimerStore>((set, get) => ({
 
     const derived = computeTimerState(session, target);
     if (derived.isComplete && !state.isComplete) {
-      recordCompletion(session);
+      recordCompletion(
+        session,
+        state.doneRounds,
+        wallElapsedSeconds(state.startedAtWall, state.pausedAccumMs, now),
+      );
     }
 
     set({
       startEpoch: now - state.pausedAccumMs - target * 1000,
+      // Resume crediting from wherever the jump landed.
+      lastPosition: target,
       currentPhase: derived.currentPhase,
       currentRound: derived.currentRound,
       timeRemaining: derived.timeRemaining,
@@ -183,15 +217,32 @@ export const useTimerStore = create<TimerStore>((set, get) => ({
       return;
     }
 
-    const elapsedMs = Date.now() - state.startEpoch - state.pausedAccumMs;
-    const derived = computeTimerState(state.currentSession, elapsedMs / 1000);
+    const now = Date.now();
+    const elapsedMs = now - state.startEpoch - state.pausedAccumMs;
+    const position = elapsedMs / 1000;
+    const derived = computeTimerState(state.currentSession, position);
+
+    // Credit any work segment the clock ran past since the last tick. Backwards
+    // movement credits nothing, and a round already done is not counted twice.
+    const fresh = workRoundsCompletedBetween(
+      state.currentSession,
+      state.lastPosition,
+      position,
+    ).filter((round) => !state.doneRounds.includes(round));
+    const doneRounds = fresh.length === 0 ? state.doneRounds : [...state.doneRounds, ...fresh];
 
     // Log one history entry on the false→true completion edge.
     if (derived.isComplete && !state.isComplete) {
-      recordCompletion(state.currentSession);
+      recordCompletion(
+        state.currentSession,
+        doneRounds,
+        wallElapsedSeconds(state.startedAtWall, state.pausedAccumMs, now),
+      );
     }
 
     set({
+      doneRounds,
+      lastPosition: Math.max(state.lastPosition, position),
       currentPhase: derived.currentPhase,
       currentRound: derived.currentRound,
       timeRemaining: derived.timeRemaining,

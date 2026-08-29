@@ -15,7 +15,6 @@ const DEFAULTS: AppSettings = {
   countdownVoice: false,
   language: 'zh-TW',
   theme: 'fitness',
-  bodyWeightKg: 70,
   backgroundUri: null,
   backgroundLevel: 'medium',
 };

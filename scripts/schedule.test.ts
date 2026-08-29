@@ -6,7 +6,8 @@ import {
   computeTimerState,
   PREPARE_SECONDS,
   totalScheduledSeconds,
-  totalWorkSeconds,
+  workRoundsCompletedBetween,
+  workSecondsForRounds,
 } from '../src/timer/schedule.ts';
 
 // Tabata-like: 2 rounds, 20s work, 10s rest. Timeline:
@@ -88,34 +89,46 @@ test('zero cooldown adds no segment', () => {
   assert.equal(computeTimerState(noCooldown, 60).isComplete, true);
 });
 
-test('totalWorkSeconds counts work intervals only', () => {
-  // 20s work x 8, 10s rest between rounds, 10s prepare, 30s cooldown.
-  const session: WorkoutSession = {
-    id: 'w',
-    name: 'Full body',
-    workTime: 20,
-    restTime: 10,
-    rounds: 8,
-    prepareTime: 10,
-    cooldownTime: 30,
-    createdAt: new Date(),
-  };
-  assert.equal(totalWorkSeconds(session), 160); // 20 * 8
-  // Prepare 10 + work 160 + rest 70 (7 gaps) + cooldown 30.
-  assert.equal(totalScheduledSeconds(session), 270);
+// prepare[0,10) work1[10,30) rest1[30,40) work2[40,60) ... work8[220,240)
+// cooldown[240,270). Work segments end at 30, 60, 90, 120, 150, 180, 210, 240.
+const eightRounds: WorkoutSession = {
+  id: 'w',
+  name: 'Full body',
+  workTime: 20,
+  restTime: 10,
+  rounds: 8,
+  prepareTime: 10,
+  cooldownTime: 30,
+  createdAt: new Date(),
+};
+
+test('totalScheduledSeconds covers prepare, work, rest and cooldown', () => {
+  // 10 prepare + 160 work + 70 rest (7 gaps) + 30 cooldown.
+  assert.equal(totalScheduledSeconds(eightRounds), 270);
 });
 
-test('totalWorkSeconds ignores rest when there is only one round', () => {
-  const session: WorkoutSession = {
-    id: 'w',
-    name: 'Single',
-    workTime: 45,
-    restTime: 30,
-    rounds: 1,
-    prepareTime: 0,
-    cooldownTime: 0,
-    createdAt: new Date(),
-  };
-  assert.equal(totalWorkSeconds(session), 45);
-  assert.equal(totalScheduledSeconds(session), 45); // no rest after the last round
+test('a round counts only once the clock has run past its work segment', () => {
+  assert.deepEqual(workRoundsCompletedBetween(eightRounds, 0, 29), []); // mid-round
+  assert.deepEqual(workRoundsCompletedBetween(eightRounds, 0, 30), [1]); // just finished
+  assert.deepEqual(workRoundsCompletedBetween(eightRounds, 30, 60), [2]);
+});
+
+test('a long gap between ticks credits every round it spans', () => {
+  // Backgrounded across four rounds: all four were genuinely run.
+  // Ends at 30, 60, 90 and 120 all fall inside the span.
+  assert.deepEqual(workRoundsCompletedBetween(eightRounds, 25, 125), [1, 2, 3, 4]);
+  assert.deepEqual(workRoundsCompletedBetween(eightRounds, 0, 270), [1, 2, 3, 4, 5, 6, 7, 8]);
+});
+
+test('skipping over a round credits nothing', () => {
+  // A forward skip moves the play position without the range being traversed,
+  // so the caller never asks about the span it jumped.
+  assert.deepEqual(workRoundsCompletedBetween(eightRounds, 240, 240), []);
+  assert.deepEqual(workRoundsCompletedBetween(eightRounds, 100, 90), []); // moved back
+});
+
+test('workSecondsForRounds sums only the rounds given', () => {
+  assert.equal(workSecondsForRounds(eightRounds, [1, 2, 3]), 60);
+  assert.equal(workSecondsForRounds(eightRounds, []), 0);
+  assert.equal(workSecondsForRounds(eightRounds, [1, 2, 3, 4, 5, 6, 7, 8]), 160);
 });
