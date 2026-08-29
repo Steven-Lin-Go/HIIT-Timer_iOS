@@ -6,10 +6,9 @@ import {
   PREPARE_SECONDS,
   segmentStarts,
   totalScheduledSeconds,
+  totalWorkSeconds,
 } from '../timer/schedule';
-import { estimateCalories } from '../stats/aggregate';
 import { useHistoryStore } from './historyStore';
-import { useSettingsStore } from './settingsStore';
 
 interface TimerStore extends TimerState {
   currentSession: WorkoutSession | null;
@@ -26,17 +25,15 @@ interface TimerStore extends TimerState {
   tick: () => void;
 }
 
-// Write one history entry for a finished session (calorie estimate uses the
-// user's stored body weight). Shared by tick() and forward-skip completion.
+// Write one history entry for a finished session. Shared by tick() and
+// forward-skip completion.
 const recordCompletion = (session: WorkoutSession) => {
-  const duration = totalScheduledSeconds(session);
-  const { bodyWeightKg } = useSettingsStore.getState();
   useHistoryStore.getState().record({
     sessionId: session.id,
     sessionName: session.name,
     completedRounds: session.rounds,
-    totalDuration: duration,
-    estimatedCalories: estimateCalories(duration, bodyWeightKg),
+    totalDuration: totalScheduledSeconds(session),
+    workSeconds: totalWorkSeconds(session),
   });
 };
 

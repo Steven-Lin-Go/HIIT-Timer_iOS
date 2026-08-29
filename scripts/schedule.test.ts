@@ -2,7 +2,12 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
 import type { WorkoutSession } from '../src/types';
-import { computeTimerState, PREPARE_SECONDS } from '../src/timer/schedule.ts';
+import {
+  computeTimerState,
+  PREPARE_SECONDS,
+  totalScheduledSeconds,
+  totalWorkSeconds,
+} from '../src/timer/schedule.ts';
 
 // Tabata-like: 2 rounds, 20s work, 10s rest. Timeline:
 // prepare[0,10) work1[10,30) rest1[30,40) work2[40,60) then complete.
@@ -81,4 +86,36 @@ test('cooldown segment runs after the final work', () => {
 test('zero cooldown adds no segment', () => {
   const noCooldown: WorkoutSession = { ...session, cooldownTime: 0 };
   assert.equal(computeTimerState(noCooldown, 60).isComplete, true);
+});
+
+test('totalWorkSeconds counts work intervals only', () => {
+  // 20s work x 8, 10s rest between rounds, 10s prepare, 30s cooldown.
+  const session: WorkoutSession = {
+    id: 'w',
+    name: 'Full body',
+    workTime: 20,
+    restTime: 10,
+    rounds: 8,
+    prepareTime: 10,
+    cooldownTime: 30,
+    createdAt: new Date(),
+  };
+  assert.equal(totalWorkSeconds(session), 160); // 20 * 8
+  // Prepare 10 + work 160 + rest 70 (7 gaps) + cooldown 30.
+  assert.equal(totalScheduledSeconds(session), 270);
+});
+
+test('totalWorkSeconds ignores rest when there is only one round', () => {
+  const session: WorkoutSession = {
+    id: 'w',
+    name: 'Single',
+    workTime: 45,
+    restTime: 30,
+    rounds: 1,
+    prepareTime: 0,
+    cooldownTime: 0,
+    createdAt: new Date(),
+  };
+  assert.equal(totalWorkSeconds(session), 45);
+  assert.equal(totalScheduledSeconds(session), 45); // no rest after the last round
 });

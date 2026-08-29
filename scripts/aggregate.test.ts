@@ -6,40 +6,42 @@ import {
   currentStreakDays,
   chartBuckets,
   minutesAxis,
-  estimateCalories,
   filterByPeriod,
   summarize,
 } from '../src/stats/aggregate.ts';
 
-const entry = (completedAt: string, totalDuration = 300, cals = 40): HistoryEntry => ({
+const entry = (completedAt: string, totalDuration = 300, workSeconds = 160): HistoryEntry => ({
   id: completedAt,
   sessionId: 's',
   sessionName: 'Test',
   completedAt,
   completedRounds: 8,
   totalDuration,
-  estimatedCalories: cals,
+  workSeconds,
 });
 
-test('estimateCalories: MET * kg * hours, rounded', () => {
-  // 8 MET * 70kg * (1800/3600 h) = 280
-  assert.equal(estimateCalories(1800, 70), 280);
-  assert.equal(estimateCalories(0, 70), 0);
-  assert.equal(estimateCalories(1800, 0), 0);
-});
-
-test('summarize totals and average', () => {
-  const s = summarize([entry('2026-08-20', 300, 40), entry('2026-08-21', 500, 60)]);
+test('summarize totals sessions, elapsed time, work time and rounds', () => {
+  const s = summarize([entry('2026-08-20', 300, 160), entry('2026-08-21', 500, 240)]);
   assert.equal(s.totalWorkouts, 2);
   assert.equal(s.totalDurationSec, 800);
-  assert.equal(s.avgDurationSec, 400);
-  assert.equal(s.totalCalories, 100);
+  assert.equal(s.totalWorkSec, 400);
+  assert.equal(s.totalRounds, 16);
 });
 
-test('summarize empty is all zero, no divide-by-zero', () => {
+test('summarize empty is all zero', () => {
   const s = summarize([]);
   assert.equal(s.totalWorkouts, 0);
-  assert.equal(s.avgDurationSec, 0);
+  assert.equal(s.totalDurationSec, 0);
+  assert.equal(s.totalWorkSec, 0);
+  assert.equal(s.totalRounds, 0);
+});
+
+test('summarize tolerates entries saved before workSeconds existed', () => {
+  const legacy = { ...entry('2026-08-20', 300) } as HistoryEntry & { workSeconds?: number };
+  delete legacy.workSeconds;
+  const s = summarize([legacy as HistoryEntry, entry('2026-08-21', 500, 240)]);
+  assert.equal(s.totalWorkSec, 240);
+  assert.equal(s.totalDurationSec, 800);
 });
 
 test('filterByPeriod keeps only entries inside the window', () => {

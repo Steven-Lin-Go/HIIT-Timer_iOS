@@ -23,7 +23,7 @@ const THEMES: ThemeName[] = ['fitness', 'bohemia', 'zen', 'ikea'];
 const LEVELS: BackgroundLevel[] = ['subtle', 'medium', 'bold'];
 
 // Screen 6: settings — sound/haptics/voice, time format, language, theme, body
-// weight (for calorie estimates), plus data reset. Persisted via settingsStore.
+// weight, plus data reset. Persisted via settingsStore.
 export function SettingsScreen() {
   const settings = useSettingsStore();
   const update = useSettingsStore((s) => s.update);

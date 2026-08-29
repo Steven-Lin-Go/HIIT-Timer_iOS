@@ -47,6 +47,13 @@ export const buildSchedule = (session: WorkoutSession): Segment[] => {
 export const totalScheduledSeconds = (session: WorkoutSession): number =>
   buildSchedule(session).reduce((sum, segment) => sum + segment.duration, 0);
 
+// Seconds spent in work intervals only, excluding prepare, rest and cooldown.
+// This is the part of a session that is actually training.
+export const totalWorkSeconds = (session: WorkoutSession): number =>
+  buildSchedule(session)
+    .filter((segment) => segment.phase === 'work')
+    .reduce((sum, segment) => sum + segment.duration, 0);
+
 // Cumulative start offset (seconds) of every segment — lets the run screen skip
 // to the previous/next boundary by re-anchoring elapsed time.
 export const segmentStarts = (session: WorkoutSession): number[] => {

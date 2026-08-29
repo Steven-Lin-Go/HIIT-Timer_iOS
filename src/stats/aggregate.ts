@@ -2,18 +2,6 @@ import type { HistoryEntry } from '../types';
 
 export type StatsPeriod = 'week' | 'month' | 'year';
 
-// MET for vigorous calisthenics/HIIT. calories = MET * kg * hours.
-const HIIT_MET = 8.0;
-
-export const estimateCalories = (
-  durationSec: number,
-  bodyWeightKg: number,
-  met: number = HIIT_MET,
-): number => {
-  const hours = Math.max(0, durationSec) / 3600;
-  return Math.round(met * Math.max(0, bodyWeightKg) * hours);
-};
-
 // Local YYYY-MM-DD key so buckets/streaks group by calendar day, not UTC.
 export const dayKey = (date: Date): string => {
   const y = date.getFullYear();
@@ -40,21 +28,17 @@ export const filterByPeriod = (
 export interface StatsSummary {
   totalWorkouts: number;
   totalDurationSec: number;
-  avgDurationSec: number;
-  totalCalories: number;
+  totalWorkSec: number;
+  totalRounds: number;
 }
 
-export const summarize = (entries: HistoryEntry[]): StatsSummary => {
-  const totalWorkouts = entries.length;
-  const totalDurationSec = entries.reduce((s, e) => s + e.totalDuration, 0);
-  const totalCalories = entries.reduce((s, e) => s + e.estimatedCalories, 0);
-  return {
-    totalWorkouts,
-    totalDurationSec,
-    avgDurationSec: totalWorkouts === 0 ? 0 : Math.round(totalDurationSec / totalWorkouts),
-    totalCalories,
-  };
-};
+export const summarize = (entries: HistoryEntry[]): StatsSummary => ({
+  totalWorkouts: entries.length,
+  totalDurationSec: entries.reduce((s, e) => s + e.totalDuration, 0),
+  // Entries written before workSeconds existed have no value to add.
+  totalWorkSec: entries.reduce((s, e) => s + (e.workSeconds ?? 0), 0),
+  totalRounds: entries.reduce((s, e) => s + e.completedRounds, 0),
+});
 
 // Consecutive calendar days with >=1 workout, counting back from today. If today
 // has none but yesterday does, the streak still counts (grace for "not done yet").

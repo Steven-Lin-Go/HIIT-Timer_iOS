@@ -29,8 +29,8 @@ export interface HistoryEntry {
   sessionName: string;
   completedAt: string; // ISO string, JSON-safe for persistence
   completedRounds: number;
-  totalDuration: number; // seconds
-  estimatedCalories: number;
+  totalDuration: number; // seconds, whole session including rest and cooldown
+  workSeconds: number; // seconds spent in work intervals only
 }
 
 export type TimeFormat = 'MM:SS' | 'SS';
@@ -49,7 +49,7 @@ export interface AppSettings {
   countdownVoice: boolean;
   language: 'zh-TW' | 'en';
   theme: 'fitness' | 'bohemia' | 'zen' | 'ikea';
-  bodyWeightKg: number; // kg, used for calorie estimate
+  bodyWeightKg: number; // kg; currently unread since the calorie tile was dropped
   // Optional user-supplied backdrop for the timer screens. Stored as a file://
   // URI inside the app's document directory, so it survives cache eviction.
   backgroundUri: string | null;

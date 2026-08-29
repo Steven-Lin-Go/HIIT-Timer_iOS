@@ -52,8 +52,13 @@ export function StatsScreen() {
         <View style={styles.grid}>
           <Stat styles={styles} label={t('stats.workouts')} value={`${summary.totalWorkouts}`} />
           <Stat styles={styles} label={t('stats.totalTime')} value={formatDuration(summary.totalDurationSec)} />
-          <Stat styles={styles} label={t('stats.calories')} value={`${summary.totalCalories}`} hint={t('stats.calHint')} />
-          <Stat styles={styles} label={t('stats.avg')} value={formatDuration(summary.avgDurationSec)} />
+          <Stat
+            styles={styles}
+            label={t('stats.activeTime')}
+            value={formatDuration(summary.totalWorkSec)}
+            hint={t('stats.activeHint')}
+          />
+          <Stat styles={styles} label={t('stats.rounds')} value={`${summary.totalRounds}`} />
         </View>
 
         <View style={styles.streakCard}>
