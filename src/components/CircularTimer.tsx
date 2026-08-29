@@ -217,7 +217,7 @@ const makeStyles = (c: Palette, f: FontScale) =>
     },
     sub: {
       color: c.muted,
-      fontSize: f.small,
+      fontSize: f.timerSub,
       fontWeight: '700',
       letterSpacing: 1.5,
       marginTop: 6,

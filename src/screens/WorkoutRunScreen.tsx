@@ -160,7 +160,7 @@ const makeStyles = (c: Palette, f: FontScale) =>
     closeSpacer: { width: 22 },
     round: {
       color: c.text,
-      fontSize: f.body,
+      fontSize: f.timerRound,
       fontWeight: '800',
       letterSpacing: 2,
     },
