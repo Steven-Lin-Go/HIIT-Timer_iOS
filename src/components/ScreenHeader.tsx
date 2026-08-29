@@ -74,7 +74,7 @@ const makeStyles = (c: Palette, f: FontScale) =>
     },
     icon: {
       color: c.text,
-      fontSize: 26,
+      fontSize: f.glyph,
       fontWeight: '700',
     },
   });

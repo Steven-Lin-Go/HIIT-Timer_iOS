@@ -35,6 +35,9 @@ export const font = {
   label: 16, // list rows, inputs, card titles
   action: 18, // primary buttons
   h3: 20,
+  // Glyph icons: the tab bar and the header chevron/gear read as one set, so
+  // they share a size. Not scaled -- these are symbols, not words.
+  glyph: 26,
   // Numeric readouts. Not scaled -- these show digits, and the layouts around
   // them (stat tiles, the countdown ring) are sized to the current values.
   h2: 28,

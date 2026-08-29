@@ -61,7 +61,7 @@ const makeStyles = (c: Palette, f: FontScale) =>
     },
     icon: {
       color: c.muted,
-      fontSize: 20,
+      fontSize: f.glyph,
     },
     label: {
       color: c.muted,
