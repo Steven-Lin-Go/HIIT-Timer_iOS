@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useT } from '../i18n/useT';
+import { TabIcon } from './TabIcon';
 import { useNavStore, type Tab } from '../stores/navStore';
 import { useTheme } from '../theme/useTheme';
 import { useFont } from '../theme/useFont';
@@ -9,10 +10,10 @@ import type { Palette } from '../theme/palettes';
 import type { FontScale } from '../theme/fitness';
 import type { StringKey } from '../i18n/strings';
 
-const TABS: { key: Tab; labelKey: StringKey; icon: string }[] = [
-  { key: 'timer', labelKey: 'tab.timer', icon: '◷' },
-  { key: 'workouts', labelKey: 'tab.workouts', icon: '≣' },
-  { key: 'stats', labelKey: 'tab.stats', icon: '▦' },
+const TABS: { key: Tab; labelKey: StringKey }[] = [
+  { key: 'timer', labelKey: 'tab.timer' },
+  { key: 'workouts', labelKey: 'tab.workouts' },
+  { key: 'stats', labelKey: 'tab.stats' },
 ];
 
 // Bottom navigation matching the mockup's TIMER / WORKOUTS / STATS bar.
@@ -35,7 +36,7 @@ export function TabBar() {
             onPress={() => setTab(tab.key)}
             style={styles.tab}
           >
-            <Text style={[styles.icon, active && styles.activeText]}>{tab.icon}</Text>
+            <TabIcon name={tab.key} color={active ? c.work : c.muted} size={f.glyph} />
             <Text style={[styles.label, active && styles.activeText]}>{t(tab.labelKey)}</Text>
           </Pressable>
         );
@@ -58,10 +59,6 @@ const makeStyles = (c: Palette, f: FontScale) =>
       alignItems: 'center',
       flex: 1,
       gap: 3,
-    },
-    icon: {
-      color: c.muted,
-      fontSize: f.glyph,
     },
     label: {
       color: c.muted,
