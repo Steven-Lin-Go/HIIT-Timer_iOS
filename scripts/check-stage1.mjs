@@ -32,7 +32,11 @@ requireValue(
   typeof expo.ios?.bundleIdentifier === 'string' && expo.ios.bundleIdentifier.length > 0,
   'app.json must define expo.ios.bundleIdentifier.',
 );
-requireValue(expo.ios?.supportsTablet === true, 'iPad support must remain enabled.');
+requireValue(
+  expo.ios?.supportsTablet === false,
+  'iPad support is off for 1.0. Turning it back on obliges the App Store submission ' +
+    'to carry 13-inch iPad screenshots, and the layouts need checking on a tablet first.',
+);
 requireValue(
   previewProfile?.distribution === 'internal' && previewProfile?.ios?.simulator === false,
   'eas.json preview profile must create an internal build for physical iOS devices.',

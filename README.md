@@ -27,10 +27,10 @@ Windows cannot run Apple's iOS Simulator. During development, use an iPhone with
 - [x] Initialize this folder as a Git repository and publish it to GitHub
 - [x] Confirm the GitHub Actions quality job passes in the published repository
 - [ ] Link the project to EAS and replace the temporary project ID
-- [ ] Register the test iPhone/iPad and provision the first preview build
+- [ ] Register the test iPhone and provision the first preview build
 - [ ] Add `EXPO_TOKEN` to the GitHub repository secrets
 - [ ] Trigger and pass the GitHub Actions EAS preview-build job
-- [ ] Install and verify the preview build on an iPhone and iPad
+- [ ] Install and verify the preview build on an iPhone
 
 ## Stage 2
 
@@ -38,7 +38,8 @@ Windows cannot run Apple's iOS Simulator. During development, use an iPhone with
 - [x] iOS control surface with start, pause, reset, and preset selection
 - [x] Default session loaded automatically on app launch
 - [x] Responsive portrait and landscape layouts that switch automatically on rotation
-- [x] Adaptive iPad portrait and landscape layouts
+- [~] Adaptive iPad portrait and landscape layouts (written, but iPad
+      distribution is off for 1.0 and the layouts are unverified on a tablet)
 - [x] Persist workout history or session state between launches
 - [x] Link the app to a real iPhone preview or EAS preview build
 

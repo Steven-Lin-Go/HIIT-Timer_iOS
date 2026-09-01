@@ -7,7 +7,7 @@
     "orientation": "default",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": true,
+      "supportsTablet": false,
       "bundleIdentifier": "com.stevenlin.hiittimer",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
