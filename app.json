@@ -30,7 +30,14 @@
     },
     "owner": "stevenlin73s-team",
     "plugins": [
-      "expo-audio",
+      [
+        "expo-audio",
+        {
+          "enableBackgroundPlayback": false,
+          "microphonePermission": false,
+          "recordAudioAndroid": false
+        }
+      ],
       [
         "expo-image-picker",
         {
