@@ -12,6 +12,35 @@ export interface DerivedTimerState {
   isComplete: boolean;
 }
 
+interface CountdownProgressInput {
+  phase: TimerPhase;
+  timeRemaining: number;
+  session: WorkoutSession | null;
+  isComplete: boolean;
+}
+
+const phaseDuration = (phase: TimerPhase, session: WorkoutSession): number => {
+  if (phase === 'work') return session.workTime;
+  if (phase === 'rest') return session.restTime;
+  if (phase === 'prepare') return session.prepareTime ?? PREPARE_SECONDS;
+  return session.cooldownTime ?? 0;
+};
+
+// Share of the current interval still remaining. The home screen supplies the
+// default full value; the run screen uses this function so every phase drains
+// from a closed circle to no colored arc at completion.
+export const countdownProgress = ({
+  phase,
+  timeRemaining,
+  session,
+  isComplete,
+}: CountdownProgressInput): number => {
+  if (!session || isComplete) return 0;
+  const duration = phaseDuration(phase, session);
+  if (duration <= 0) return 0;
+  return Math.max(0, Math.min(1, timeRemaining / duration));
+};
+
 interface Segment {
   phase: TimerPhase;
   round: number;

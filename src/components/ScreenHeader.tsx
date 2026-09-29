@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useNavStore } from '../stores/navStore';
+import { useT } from '../i18n/useT';
 import { useTheme } from '../theme/useTheme';
 import { useFont } from '../theme/useFont';
 import type { Palette } from '../theme/palettes';
@@ -18,23 +19,24 @@ interface Props {
 export function ScreenHeader({ title, onBack, right = 'settings' }: Props) {
   const openSettings = useNavStore((s) => s.openSettings);
   const c = useTheme();
+  const t = useT();
   const f = useFont();
   const styles = useMemo(() => makeStyles(c, f), [c, f]);
 
   return (
-    <View style={styles.header}>
+    <View testID="screen-header" style={styles.header}>
       <View style={styles.side}>
         {onBack ? (
-          <Pressable accessibilityRole="button" onPress={onBack} style={styles.tap}>
-            <Text style={styles.icon}>‹</Text>
+          <Pressable accessibilityRole="button" accessibilityLabel={t('common.back')} testID="header-back" onPress={onBack} style={styles.tap}>
+            <Text maxFontSizeMultiplier={1} style={styles.icon}>‹</Text>
           </Pressable>
         ) : null}
       </View>
-      <Text style={styles.title}>{title}</Text>
+      <Text maxFontSizeMultiplier={1.5} style={styles.title}>{title}</Text>
       <View style={[styles.side, styles.right]}>
         {right === 'settings' ? (
-          <Pressable accessibilityRole="button" onPress={openSettings} style={styles.tap}>
-            <Text style={styles.icon}>⚙</Text>
+          <Pressable accessibilityRole="button" accessibilityLabel={t('header.settings')} testID="header-settings" onPress={openSettings} style={styles.tap}>
+            <Text maxFontSizeMultiplier={1} style={styles.icon}>⚙</Text>
           </Pressable>
         ) : null}
       </View>

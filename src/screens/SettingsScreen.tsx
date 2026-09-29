@@ -81,7 +81,7 @@ export function SettingsScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View testID="settings-screen" style={styles.container}>
       <ScreenHeader title={t('header.settings')} onBack={closeSettings} right="none" />
       <ScrollView contentContainerStyle={styles.body}>
         <Text style={styles.group}>{t('settings.group.timer')}</Text>
@@ -228,7 +228,7 @@ function Toggle({
   return (
     <View style={[styles.row, last && styles.last]}>
       <Text style={styles.rowLabel}>{label}</Text>
-      <Switch value={value} onValueChange={onChange} />
+      <Switch accessibilityLabel={label} value={value} onValueChange={onChange} />
     </View>
   );
 }
@@ -292,22 +292,32 @@ const makeStyles = (c: Palette, f: FontScale) =>
       borderBottomColor: c.border,
       borderBottomWidth: 1,
       flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 10,
       justifyContent: 'space-between',
       paddingVertical: 14,
     },
     last: { borderBottomWidth: 0 },
     rowLabel: {
+      flexBasis: 120,
+      flexGrow: 1,
+      flexShrink: 1,
       color: c.text,
       fontSize: f.label,
       fontWeight: '600',
     },
     segment: {
+      maxWidth: '100%',
+      flexWrap: 'wrap',
       backgroundColor: c.surfaceAlt,
       borderRadius: radius.sm,
       flexDirection: 'row',
       overflow: 'hidden',
     },
     segmentBtn: {
+      flexGrow: 1,
+      minHeight: 44,
+      justifyContent: 'center',
       paddingHorizontal: 12,
       paddingVertical: 6,
     },
@@ -315,6 +325,7 @@ const makeStyles = (c: Palette, f: FontScale) =>
       backgroundColor: c.work,
     },
     segmentText: {
+      textAlign: 'center',
       color: c.muted,
       fontSize: f.small,
       fontWeight: '800',
@@ -331,21 +342,19 @@ const makeStyles = (c: Palette, f: FontScale) =>
     tile: {
       borderRadius: radius.lg,
       borderWidth: 1,
-      height: 104,
+      minHeight: 104,
       justifyContent: 'flex-end',
       overflow: 'hidden',
       padding: spacing.sm,
-      // Two per row, accounting for the gap between them.
-      width: '48.5%',
+      flexBasis: 140,
+      flexGrow: 1,
     },
     tileSelected: { borderWidth: 2 },
     tileRing: {
       borderRadius: radius.pill,
       borderWidth: 3,
       height: 34,
-      left: spacing.sm,
-      position: 'absolute',
-      top: spacing.sm,
+      marginBottom: spacing.md,
       width: 34,
     },
     tileLabel: {
@@ -354,6 +363,8 @@ const makeStyles = (c: Palette, f: FontScale) =>
       letterSpacing: 1,
     },
     bgActions: {
+      maxWidth: '100%',
+      flexWrap: 'wrap',
       alignItems: 'center',
       flexDirection: 'row',
       gap: spacing.md,

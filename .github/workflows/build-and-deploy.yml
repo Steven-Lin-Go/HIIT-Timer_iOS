@@ -15,6 +15,12 @@ on:
         options:
           - preview
           - production
+          - simulator
+      production_ready:
+        description: I reviewed the final behavior/state matrix and accept spending one production build
+        required: true
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -39,15 +45,49 @@ jobs:
       - name: Type check
         run: npm run typecheck
 
+      - name: Unit tests
+        run: npm test
+
       - name: Expo Doctor
         run: npm run doctor
 
-  eas-build:
-    name: EAS iOS build
-    needs: quality
-    if: github.event_name == 'workflow_dispatch'
+      - name: Validate iOS JavaScript bundle
+        run: npx expo export --platform ios --output-dir dist/ios --max-workers 2
+
+  responsive:
+    name: Responsive browser checks
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium webkit
+      - run: npm run test:responsive
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: responsive-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
+
+  eas-build:
+    name: EAS iOS build
+    needs: [quality, responsive]
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Enforce production release confirmation
+        if: ${{ inputs.profile == 'production' && inputs.production_ready != true }}
+        run: |
+          echo "Production build blocked: complete docs/release-gate.md and enable production_ready."
+          exit 1
+
       - name: Checkout
         uses: actions/checkout@v5
 
@@ -72,4 +112,4 @@ jobs:
         run: npm ci
 
       - name: Trigger EAS iOS build
-        run: eas build --platform ios --profile ${{ inputs.profile }} --non-interactive --no-wait
+        run: eas build --platform ios --profile ${{ inputs.profile }} --non-interactive

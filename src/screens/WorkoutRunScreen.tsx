@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useHasPhotoBackdrop } from '../components/AppBackdrop';
+import { TimerLayout } from '../components/TimerLayout';
 import { CircularTimer } from '../components/CircularTimer';
 import { useT } from '../i18n/useT';
 import { formatClock } from '../lib/format';
@@ -12,7 +13,7 @@ import { useTheme } from '../theme/useTheme';
 import { useFont } from '../theme/useFont';
 import { phaseAccent, type Palette } from '../theme/palettes';
 import { radius, spacing, type FontScale } from '../theme/fitness';
-import { PREPARE_SECONDS } from '../timer/schedule';
+import { countdownProgress } from '../timer/schedule';
 
 // Screen 3: the running workout — ring, round counter, up-next, transport
 // controls (prev segment / pause-resume / next segment).
@@ -39,16 +40,12 @@ export function WorkoutRunScreen() {
   const onPhoto = useHasPhotoBackdrop(true);
 
   const displayPhase = isComplete ? 'complete' : currentPhase;
-
-  // Ring drains as the current segment counts down.
-  const phaseTotal = (() => {
-    if (!currentSession) return 0;
-    if (currentPhase === 'work') return currentSession.workTime;
-    if (currentPhase === 'rest') return currentSession.restTime;
-    if (currentPhase === 'prepare') return currentSession.prepareTime ?? PREPARE_SECONDS;
-    return currentSession.cooldownTime ?? 0;
-  })();
-  const progress = isComplete || phaseTotal <= 0 ? 1 : timeRemaining / phaseTotal;
+  const progress = countdownProgress({
+    phase: currentPhase,
+    timeRemaining,
+    session: currentSession,
+    isComplete,
+  });
 
   const upNext = (() => {
     if (isComplete) return null;
@@ -64,10 +61,10 @@ export function WorkoutRunScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View testID="run-screen" style={styles.container}>
       <View style={styles.topRow}>
-        <Pressable accessibilityRole="button" onPress={finish} hitSlop={10}>
-          <Text style={styles.close}>✕</Text>
+        <Pressable accessibilityRole="button" accessibilityLabel={t('run.finish')} onPress={finish} style={styles.closeButton}>
+          <Text maxFontSizeMultiplier={1} style={styles.close}>✕</Text>
         </Pressable>
         <Text style={[styles.round, onPhoto && styles.plate]}>
           {t('round')} {Math.min(currentRound, totalRounds)} / {totalRounds}
@@ -75,69 +72,84 @@ export function WorkoutRunScreen() {
         <View style={styles.closeSpacer} />
       </View>
 
-      <View style={styles.body}>
-        <CircularTimer
-          time={isComplete ? '✓' : formatClock(timeRemaining, timeFormat)}
-          phaseLabel={t(`phase.${displayPhase}`)}
-          accent={phaseAccent(c, displayPhase)}
-          subLabel={currentSession?.name}
-          size={300}
-          progress={progress}
-          plate={onPhoto}
-        />
+      <TimerLayout
+        actions={
+          isComplete ? (
+            <View style={styles.actions}>
+              <Pressable
+                accessibilityRole="button"
+                style={({ pressed }) => [styles.primary, pressed && styles.pressed]}
+                onPress={() => startTimer()}
+              >
+                <Text style={styles.primaryText}>{t('run.restart')}</Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                style={({ pressed }) => [styles.secondary, pressed && styles.pressed]}
+                onPress={finish}
+              >
+                <Text style={styles.secondaryText}>{t('run.finish')}</Text>
+              </Pressable>
+            </View>
+          ) : (
+            <View style={styles.transport}>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t('run.previous')}
+                accessibilityState={{ disabled: isPaused }}
+                disabled={isPaused}
+                style={({ pressed }) => [styles.sideBtn, isPaused && styles.disabled, pressed && styles.pressed]}
+                testID="run-previous" onPress={() => skip('back')}
+              >
+                <Text maxFontSizeMultiplier={1} style={styles.sideIcon}>⏮</Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t(isPaused ? 'run.resume' : 'run.pause')}
+                style={({ pressed }) => [styles.playBtn, pressed && styles.pressed]}
+                testID="run-pause" onPress={() => (isPaused ? startTimer() : pauseTimer())}
+              >
+                <Text maxFontSizeMultiplier={1} style={styles.playIcon}>{isPaused ? '▶' : '❙❙'}</Text>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={t('run.next')}
+                accessibilityState={{ disabled: isPaused }}
+                disabled={isPaused}
+                style={({ pressed }) => [styles.sideBtn, isPaused && styles.disabled, pressed && styles.pressed]}
+                testID="run-next" onPress={() => skip('forward')}
+              >
+                <Text maxFontSizeMultiplier={1} style={styles.sideIcon}>⏭</Text>
+              </Pressable>
+            </View>
+          )
+        }
+      >
+        {(ringSize) => (
+          <>
+            <CircularTimer
+              time={isComplete ? '✓' : formatClock(timeRemaining, timeFormat)}
+              phaseLabel={t(`phase.${displayPhase}`)}
+              accent={phaseAccent(c, displayPhase)}
+              size={ringSize}
+              progress={progress}
+              plate={onPhoto}
+            />
 
-        {upNext ? (
-          <View style={[styles.upNext, onPhoto && styles.plate]}>
-            <Text style={styles.upNextLabel}>{t('run.upNext')} · {upNext.label}</Text>
-            <Text style={styles.upNextValue}>{formatClock(upNext.value, timeFormat)}</Text>
-          </View>
-        ) : (
-          <Text style={[styles.completeText, isComplete && onPhoto && styles.plate]}>
-            {isComplete ? t('run.complete') : ' '}
-          </Text>
+            {upNext ? (
+              <View style={[styles.upNext, onPhoto && styles.plate]}>
+                <Text style={styles.upNextLabel}>{t('run.upNext')} · {upNext.label}</Text>
+                <Text style={styles.upNextValue}>{formatClock(upNext.value, timeFormat)}</Text>
+              </View>
+            ) : (
+              <Text style={[styles.completeText, isComplete && onPhoto && styles.plate]}>
+                {isComplete ? t('run.complete') : ' '}
+              </Text>
+            )}
+            <Text style={[styles.sessionName, onPhoto && styles.plate]}>{currentSession?.name}</Text>
+          </>
         )}
-      </View>
-
-      {isComplete ? (
-        <View style={styles.actions}>
-          <Pressable
-            style={({ pressed }) => [styles.primary, pressed && styles.pressed]}
-            onPress={() => startTimer()}
-          >
-            <Text style={styles.primaryText}>{t('run.restart')}</Text>
-          </Pressable>
-          <Pressable
-            style={({ pressed }) => [styles.secondary, pressed && styles.pressed]}
-            onPress={finish}
-          >
-            <Text style={styles.secondaryText}>{t('run.finish')}</Text>
-          </Pressable>
-        </View>
-      ) : (
-        <View style={styles.transport}>
-          <Pressable
-            accessibilityRole="button"
-            style={({ pressed }) => [styles.sideBtn, pressed && styles.pressed]}
-            onPress={() => skip('back')}
-          >
-            <Text style={styles.sideIcon}>⏮</Text>
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            style={({ pressed }) => [styles.playBtn, pressed && styles.pressed]}
-            onPress={() => (isPaused ? startTimer() : pauseTimer())}
-          >
-            <Text style={styles.playIcon}>{isPaused ? '▶' : '❙❙'}</Text>
-          </Pressable>
-          <Pressable
-            accessibilityRole="button"
-            style={({ pressed }) => [styles.sideBtn, pressed && styles.pressed]}
-            onPress={() => skip('forward')}
-          >
-            <Text style={styles.sideIcon}>⏭</Text>
-          </Pressable>
-        </View>
-      )}
+      </TimerLayout>
     </View>
   );
 }
@@ -157,23 +169,28 @@ const makeStyles = (c: Palette, f: FontScale) =>
       fontSize: 22,
       fontWeight: '700',
     },
-    closeSpacer: { width: 22 },
+    closeButton: { width: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
+    closeSpacer: { width: 44 },
     round: {
+      flex: 1,
+      textAlign: 'center',
       color: c.text,
       fontSize: f.timerRound,
       fontWeight: '800',
       letterSpacing: 2,
     },
-    body: {
-      alignItems: 'center',
-      flex: 1,
-      justifyContent: 'center',
+    sessionName: {
+      color: c.text,
+      fontSize: f.body,
+      fontWeight: '700',
+      textAlign: 'center',
+      maxWidth: '100%',
     },
     upNext: {
       alignItems: 'center',
-      marginTop: spacing.xl,
     },
     upNextLabel: {
+      textAlign: 'center',
       color: c.muted,
       fontSize: f.timerLabel,
       fontWeight: '700',
@@ -186,11 +203,11 @@ const makeStyles = (c: Palette, f: FontScale) =>
       marginTop: 4,
     },
     completeText: {
+      textAlign: 'center',
       color: c.rest,
       fontSize: f.h3,
       fontWeight: '800',
       letterSpacing: 1.5,
-      marginTop: spacing.xl,
     },
     transport: {
       alignItems: 'center',
@@ -262,4 +279,5 @@ const makeStyles = (c: Palette, f: FontScale) =>
       paddingVertical: 8,
     },
     pressed: { opacity: 0.85 },
+    disabled: { opacity: 0.4 },
   });

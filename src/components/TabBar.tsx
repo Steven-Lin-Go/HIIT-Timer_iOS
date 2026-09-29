@@ -32,12 +32,15 @@ export function TabBar() {
         return (
           <Pressable
             key={tab.key}
-            accessibilityRole="button"
+            testID={`tab-${tab.key}`}
+            accessibilityRole="tab"
+            accessibilityLabel={t(tab.labelKey)}
+            aria-selected={active}
             onPress={() => setTab(tab.key)}
             style={styles.tab}
           >
             <TabIcon name={tab.key} color={active ? c.work : c.muted} size={f.glyph} />
-            <Text style={[styles.label, active && styles.activeText]}>{t(tab.labelKey)}</Text>
+            <Text maxFontSizeMultiplier={1.5} style={[styles.label, active && styles.activeText]}>{t(tab.labelKey)}</Text>
           </Pressable>
         );
       })}
@@ -61,6 +64,8 @@ const makeStyles = (c: Palette, f: FontScale) =>
       gap: 3,
     },
     label: {
+      textAlign: 'center',
+      maxWidth: '100%',
       color: c.muted,
       fontSize: f.tab,
       fontWeight: '700',

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 
 import { BarChart } from '../components/BarChart';
 import { ScreenHeader } from '../components/ScreenHeader';
@@ -29,7 +29,9 @@ export function StatsScreen() {
   const c = useTheme();
   const f = useFont();
   const t = useT();
-  const styles = useMemo(() => makeStyles(c, f), [c, f]);
+  const { width, fontScale } = useWindowDimensions();
+  const singleColumn = width < 380 || fontScale > 1.3;
+  const styles = useMemo(() => makeStyles(c, f, singleColumn), [c, f, singleColumn]);
 
   const scoped = filterByPeriod(entries, period);
   const summary = summarize(scoped);
@@ -42,22 +44,22 @@ export function StatsScreen() {
   const workDelta = percentChange(summary.totalWorkSec, previous.totalWorkSec);
 
   return (
-    <View style={styles.container}>
+    <View testID="stats-screen" style={styles.container}>
       <ScreenHeader title={t('header.stats')} />
 
-      <View style={styles.periodRow}>
-        {(['week', 'month', 'year'] as StatsPeriod[]).map((p) => (
-          <Text
-            key={p}
-            onPress={() => setPeriod(p)}
-            style={[styles.period, period === p && styles.periodActive]}
-          >
-            {t(`period.${p}`)}
-          </Text>
-        ))}
-      </View>
-
       <ScrollView contentContainerStyle={styles.body}>
+        <View style={styles.periodRow}>
+          {(['week', 'month', 'year'] as StatsPeriod[]).map((p) => (
+            <Text
+              key={p}
+              onPress={() => setPeriod(p)}
+              style={[styles.period, period === p && styles.periodActive]}
+            >
+              {t(`period.${p}`)}
+            </Text>
+          ))}
+        </View>
+
         <View style={styles.grid}>
           <Stat styles={styles} label={t('stats.workouts')} value={`${summary.totalWorkouts}`} />
           <Stat styles={styles} label={t('stats.totalTime')} value={formatDuration(summary.totalDurationSec)} />
@@ -128,20 +130,21 @@ function Stat({
 }) {
   return (
     <View style={styles.statCard}>
-      <Text style={styles.statValue}>{value}</Text>
+      <Text testID="stat-value" numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.5} maxFontSizeMultiplier={1.5} style={styles.statValue}>{value}</Text>
       <Text style={styles.statLabel}>{label}</Text>
       {hint ? <Text style={styles.statHint}>{hint}</Text> : null}
     </View>
   );
 }
 
-const makeStyles = (c: Palette, f: FontScale) =>
+const makeStyles = (c: Palette, f: FontScale, singleColumn: boolean) =>
   StyleSheet.create({
     container: { flex: 1 },
     periodRow: {
       flexDirection: 'row',
+      flexWrap: 'wrap',
       gap: spacing.lg,
-      paddingHorizontal: spacing.lg,
+      marginBottom: spacing.sm,
     },
     period: {
       color: c.muted,
@@ -166,7 +169,8 @@ const makeStyles = (c: Palette, f: FontScale) =>
       borderColor: c.border,
       borderRadius: radius.lg,
       borderWidth: 1,
-      flexBasis: '48%',
+      flexBasis: singleColumn ? '100%' : '48%',
+      minWidth: 0,
       flexGrow: 1,
       padding: spacing.md,
     },
@@ -190,6 +194,8 @@ const makeStyles = (c: Palette, f: FontScale) =>
     trendRow: {
       alignItems: 'center',
       flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.xs,
       justifyContent: 'space-between',
       marginTop: spacing.sm,
       paddingHorizontal: spacing.xs,
@@ -221,6 +227,7 @@ const makeStyles = (c: Palette, f: FontScale) =>
       borderWidth: 1,
       marginTop: spacing.sm,
       paddingVertical: spacing.md,
+      paddingHorizontal: spacing.md,
     },
     streakValue: {
       color: c.text,
@@ -228,6 +235,7 @@ const makeStyles = (c: Palette, f: FontScale) =>
       fontWeight: '800',
     },
     streakLabel: {
+      textAlign: 'center',
       color: c.muted,
       fontSize: f.small,
       fontWeight: '800',

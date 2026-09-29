@@ -12,8 +12,8 @@ export type ThemeName = 'fitness' | 'bohemia' | 'zen' | 'ikea';
 export type RingStyle =
   | 'bold' // fitness: thick, even, hard-edged
   | 'brush' // bohemia: two-tone painted arcs with soft caps
-  | 'enso' // zen: hand-drawn ink circle, uneven weight, open gap
-  | 'fine'; // ikea: thin track with a rounded progress cap
+  | 'enso' // zen: hand-drawn ink circle with uneven weight
+  | 'fine'; // ikea: thin track with a rounded accent ring
 
 export interface Palette {
   bg: string;

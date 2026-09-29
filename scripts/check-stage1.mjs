@@ -5,6 +5,7 @@ const readJson = (relativePath) =>
 
 const appConfig = readJson('app.json');
 const easConfig = readJson('eas.json');
+const packageConfig = readJson('package.json');
 const workflow = readFileSync(
   new URL('../.github/workflows/build-and-deploy.yml', import.meta.url),
   'utf8',
@@ -14,6 +15,8 @@ const expo = appConfig.expo ?? {};
 const projectId = expo.extra?.eas?.projectId;
 const previewProfile = easConfig.build?.preview;
 const failures = [];
+const releaseVerify = packageConfig.scripts?.['release:verify'] ?? '';
+const projectUpdateUrl = `https://u.expo.dev/${projectId}`;
 
 const requireValue = (condition, message) => {
   if (!condition) {
@@ -42,8 +45,46 @@ requireValue(
   'eas.json preview profile must create an internal build for physical iOS devices.',
 );
 requireValue(
+  expo.runtimeVersion?.policy === 'appVersion' && expo.updates?.url === projectUpdateUrl,
+  'app.json must use the appVersion runtime policy and the project EAS Update URL.',
+);
+requireValue(
+  easConfig.build?.development?.channel === 'development' &&
+    previewProfile?.channel === 'preview' &&
+    easConfig.build?.production?.channel === 'production',
+  'EAS build profiles must use isolated development, preview, and production update channels.',
+);
+requireValue(
+  typeof packageConfig.dependencies?.['expo-updates'] === 'string' &&
+    typeof packageConfig.devDependencies?.['@expo/ngrok'] === 'string' &&
+    packageConfig.scripts?.['preview:phone']?.includes('expo start --go --lan') &&
+    packageConfig.scripts?.['update:preview']?.includes('eas update --channel preview'),
+  'The Expo Go phone preview, project-local tunnel adapter, and EAS preview update commands must remain configured.',
+);
+requireValue(
+  easConfig.build?.simulator?.distribution === 'internal' &&
+    easConfig.build?.simulator?.ios?.simulator === true,
+  'eas.json simulator profile must target iOS Simulator.',
+);
+requireValue(
+  easConfig.cli?.appVersionSource === 'remote' && easConfig.build?.production?.autoIncrement === true,
+  'Production builds must use remote version management with autoIncrement enabled.',
+);
+requireValue(
   workflow.includes('secrets.EXPO_TOKEN'),
   'The GitHub Actions workflow must authenticate with the EXPO_TOKEN secret.',
+);
+requireValue(
+  workflow.includes('production_ready') &&
+    workflow.includes("inputs.profile == 'production'") &&
+    workflow.includes('inputs.production_ready != true'),
+  'The GitHub Actions workflow must block unconfirmed production builds.',
+);
+requireValue(
+  ['stage1:preflight', 'typecheck', 'npm test', 'doctor', 'export:ios', 'test:responsive'].every(
+    (step) => releaseVerify.includes(step),
+  ),
+  'package.json release:verify must include preflight, typecheck, unit, Doctor, iOS export, and responsive checks.',
 );
 
 if (process.env.CI) {
@@ -60,5 +101,8 @@ if (failures.length > 0) {
   }
   process.exitCode = 1;
 } else {
-  console.log('Stage 1 EAS preflight passed. The project is ready to request an iOS build.');
+  console.log(
+    'Stage 1 EAS configuration preflight passed. Continue with every remaining ' +
+      'release:verify check before requesting an iOS build.',
+  );
 }

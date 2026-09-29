@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useTheme } from '../theme/useTheme';
+import { useT } from '../i18n/useT';
 import { useFont } from '../theme/useFont';
 import type { Palette } from '../theme/palettes';
 import { radius, type FontScale } from '../theme/fitness';
@@ -29,6 +30,7 @@ export function Stepper({
   onChange,
 }: Props) {
   const c = useTheme();
+  const t = useT();
   const f = useFont();
   const styles = useMemo(() => makeStyles(c, f), [c, f]);
   const clamp = (v: number) => Math.min(max, Math.max(min, v));
@@ -36,23 +38,31 @@ export function Stepper({
 
   return (
     <View style={styles.row}>
-      <View style={[styles.dot, { backgroundColor: dotColor }]} />
-      <Text style={styles.label}>{label}</Text>
+      <View style={styles.heading}>
+        <View style={[styles.dot, { backgroundColor: dotColor }]} />
+        <Text style={styles.label}>{label}</Text>
+      </View>
       <View style={styles.controls}>
         <Pressable
           accessibilityRole="button"
+          accessibilityLabel={t('control.decrease', { label })}
+          disabled={value <= min}
+          accessibilityState={{ disabled: value <= min }}
           onPress={() => onChange(clamp(value - step))}
-          style={({ pressed }) => [styles.btn, pressed && styles.pressed]}
+          style={({ pressed }) => [styles.btn, value <= min && styles.disabled, pressed && styles.pressed]}
         >
-          <Text style={styles.btnText}>−</Text>
+          <Text maxFontSizeMultiplier={1} style={styles.btnText}>−</Text>
         </Pressable>
-        <Text style={styles.value}>{format(value)}</Text>
+        <Text numberOfLines={1} adjustsFontSizeToFit maxFontSizeMultiplier={1.5} style={styles.value}>{format(value)}</Text>
         <Pressable
           accessibilityRole="button"
+          accessibilityLabel={t('control.increase', { label })}
+          disabled={value >= max}
+          accessibilityState={{ disabled: value >= max }}
           onPress={() => onChange(clamp(value + step))}
-          style={({ pressed }) => [styles.btn, pressed && styles.pressed]}
+          style={({ pressed }) => [styles.btn, value >= max && styles.disabled, pressed && styles.pressed]}
         >
-          <Text style={styles.btnText}>+</Text>
+          <Text maxFontSizeMultiplier={1} style={styles.btnText}>+</Text>
         </Pressable>
       </View>
     </View>
@@ -66,8 +76,11 @@ const makeStyles = (c: Palette, f: FontScale) =>
       borderBottomColor: c.border,
       borderBottomWidth: 1,
       flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 10,
       paddingVertical: 14,
     },
+    heading: { flexDirection: 'row', alignItems: 'center', flexBasis: 120, flexGrow: 1 },
     dot: {
       borderRadius: radius.pill,
       height: 10,
@@ -88,13 +101,14 @@ const makeStyles = (c: Palette, f: FontScale) =>
       alignItems: 'center',
       backgroundColor: c.surfaceAlt,
       borderRadius: radius.sm,
-      height: 34,
+      height: 44,
       justifyContent: 'center',
-      width: 34,
+      width: 44,
     },
     pressed: {
       opacity: 0.7,
     },
+    disabled: { opacity: 0.4 },
     btnText: {
       color: c.text,
       fontSize: 20,
@@ -105,7 +119,7 @@ const makeStyles = (c: Palette, f: FontScale) =>
       color: c.text,
       fontSize: f.label,
       fontWeight: '800',
-      minWidth: 64,
+      width: 76,
       textAlign: 'center',
     },
   });

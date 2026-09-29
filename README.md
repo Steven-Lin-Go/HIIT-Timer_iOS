@@ -12,6 +12,18 @@ iOS-only HIIT interval timer built with Expo, React Native, TypeScript, and Zust
 
 Windows cannot run Apple's iOS Simulator. During development, use an iPhone with Expo Go when the selected SDK is supported, or use EAS development/preview builds on a registered iPhone. Final iOS compilation runs on EAS Build.
 
+## App Review layout regression
+
+See [the responsive layout report](docs/responsive-review.md) for the September 2026 overlap fix, test coverage, screenshots, and the remaining native iOS release checks.
+
+`npm run test:responsive` runs the actual Expo web screens in Chromium and WebKit across phone/tablet sizes, both orientations and languages. Install the test engines first with `npx playwright install chromium webkit`. These browser checks complement native iPhone testing; they do not emulate UIKit or iOS Dynamic Type.
+
+Before spending an EAS iOS build, complete the [release gate](docs/release-gate.md)
+and run `npm run release:verify`. This single local gate checks configuration,
+types, unit behavior, Expo compatibility, the iOS JavaScript bundle, and the
+complete responsive suite. Cloud builds are reserved for the final accepted
+batch and TestFlight's native-only checks.
+
 ## Stage 1
 
 - [x] Expo SDK 57 project skeleton
@@ -82,8 +94,19 @@ token auth instead of the browser login flow.
 
 Then:
 
-- Iterate on JS/UI (no build needed): `npx expo start --dev-client`, open the
-  existing dev client on the iPhone.
+- Fastest JS/UI loop (no build needed): run `npm run preview:phone`, install or
+  open Expo Go on the iPhone, and scan the QR code with the Camera app. Keep the
+  terminal running; saved changes reload on the phone. Use
+  `npm run preview:phone:tunnel` if the computer and iPhone cannot connect over
+  the same LAN. The tunnel adapter is installed locally in this project, so the
+  command does not depend on a global npm module or the machine's global PATH.
+- After an update-capable development/preview binary has been installed, a
+  compatible remote preview can be published with
+  `npm run update:preview -- --message "describe the change"`. This uploads the
+  JS bundle to EAS and requires explicit authorization.
+- The current TestFlight Build 8 was created before `expo-updates` was added,
+  so it cannot receive these remote preview updates. Expo Go QR preview works
+  immediately; the next accepted binary enables EAS Update for later changes.
 - Rebuild only when native code changes (new native module, `app.json`
   plugins/permissions, bundle id, icon/splash, SDK upgrade):
   `npx eas-cli@latest build -p ios --profile development`. It reuses the remote
@@ -120,6 +143,12 @@ bumps `@expo/config-plugins` past the affected `xcode`/`uuid` releases.
 
 ## CI behavior
 
-- Pull requests and pushes to `main`: install, TypeScript check, and Expo Doctor.
-- Manual workflow dispatch: quality checks followed by an EAS iOS preview or production build.
+- Pull requests and pushes to `main`: TypeScript, unit tests, Expo Doctor, iOS JavaScript export, and Chromium/WebKit responsive checks.
+- Manual workflow dispatch: both check jobs must pass before an EAS iOS preview, production, or simulator build. The job waits for the remote build result (90-minute job limit).
 - App Store submission is intentionally deferred until the release stage.
+
+## App Review follow-up
+
+See [Build 8 TestFlight checklist and App Review reply drafts](docs/app-review-reply.md)
+for the current cloud build/upload links, native verification checklist, and the
+steps to reply and resubmit after addressing the Guideline 4 layout rejection.

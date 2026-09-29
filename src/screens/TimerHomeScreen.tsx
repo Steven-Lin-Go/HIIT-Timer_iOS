@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
-import { Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useHasPhotoBackdrop } from '../components/AppBackdrop';
+import { TimerLayout } from '../components/TimerLayout';
 import { CircularTimer } from '../components/CircularTimer';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { useT } from '../i18n/useT';
@@ -29,65 +30,65 @@ export function TimerHomeScreen() {
   // has to compete with whatever the user picked.
   const onPhoto = useHasPhotoBackdrop(true);
 
-  // The ring is the only fixed-height element here, so on shorter screens it
-  // has to give way -- otherwise the centred body overflows and rides over the
-  // START button below it.
-  const { height, width } = useWindowDimensions();
-  const ringSize = Math.max(190, Math.min(280, width - 96, height * 0.3));
-
   const start = () => {
     startTimer();
     setTimerScreen('run');
   };
 
   return (
-    <View style={styles.container}>
+    <View testID="home-screen" style={styles.container}>
       <ScreenHeader title={t('header.timer')} />
-      <View style={styles.body}>
-        <Text style={[styles.status, onPhoto && styles.plate]}>⚡ {t('home.ready')}</Text>
+      <TimerLayout
+        actions={
+          <View style={styles.actions}>
+            <Pressable
+              accessibilityRole="button"
+              disabled={!session}
+              onPress={start}
+              style={({ pressed }) => [
+                styles.startBtn,
+                pressed && styles.pressed,
+                !session && styles.disabled,
+              ]}
+            >
+              <Text style={styles.startText}>{t('home.start')}</Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              onPress={() => openSetup(null)}
+              style={({ pressed }) => [styles.editBtn, pressed && styles.pressed]}
+            >
+              <Text style={styles.editText}>{t('home.adjust')}</Text>
+            </Pressable>
+          </View>
+        }
+      >
+        {(ringSize) => (
+          <>
+            <Text style={[styles.status, onPhoto && styles.plate]}>⚡ {t('home.ready')}</Text>
 
-        <CircularTimer
-          time={formatClock(session?.workTime ?? 0, timeFormat)}
-          phaseLabel={t('phase.work')}
-          accent={phaseAccent(c, 'work')}
-          subLabel={`1 / ${session?.rounds ?? 0} ${t('round')}`}
-          plate={onPhoto}
-          size={ringSize}
-        />
+            <CircularTimer
+              time={formatClock(session?.workTime ?? 0, timeFormat)}
+              phaseLabel={t('phase.work')}
+              accent={phaseAccent(c, 'work')}
+              subLabel={`1 / ${session?.rounds ?? 0} ${t('round')}`}
+              plate={onPhoto}
+              size={ringSize}
+            />
 
-        <View style={[styles.upNext, onPhoto && styles.plate]}>
-          <Text style={styles.upNextLabel}>{t('home.upNextRest')}</Text>
-          <Text style={styles.upNextValue}>
-            {formatClock(session?.restTime ?? 0, timeFormat)}
-          </Text>
-        </View>
+            <View style={[styles.upNext, onPhoto && styles.plate]}>
+              <Text style={styles.upNextLabel}>{t('home.upNextRest')}</Text>
+              <Text style={styles.upNextValue}>
+                {formatClock(session?.restTime ?? 0, timeFormat)}
+              </Text>
+            </View>
 
-        <Text style={[styles.sessionName, onPhoto && styles.plate]}>
-          {session?.name ?? t('home.noWorkout')}
-        </Text>
-      </View>
-
-      <View style={styles.actions}>
-        <Pressable
-          accessibilityRole="button"
-          disabled={!session}
-          onPress={start}
-          style={({ pressed }) => [
-            styles.startBtn,
-            pressed && styles.pressed,
-            !session && styles.disabled,
-          ]}
-        >
-          <Text style={styles.startText}>{t('home.start')}</Text>
-        </Pressable>
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => openSetup(null)}
-          style={({ pressed }) => [styles.editBtn, pressed && styles.pressed]}
-        >
-          <Text style={styles.editText}>{t('home.adjust')}</Text>
-        </Pressable>
-      </View>
+            <Text style={[styles.sessionName, onPhoto && styles.plate]}>
+              {session?.name ?? t('home.noWorkout')}
+            </Text>
+          </>
+        )}
+      </TimerLayout>
     </View>
   );
 }
@@ -95,14 +96,8 @@ export function TimerHomeScreen() {
 const makeStyles = (c: Palette, f: FontScale) =>
   StyleSheet.create({
     container: { flex: 1 },
-    body: {
-      alignItems: 'center',
-      flex: 1,
-      gap: spacing.md,
-      justifyContent: 'center',
-      paddingBottom: spacing.sm,
-    },
     status: {
+      textAlign: 'center',
       color: c.rest,
       fontSize: f.small,
       fontWeight: '800',
@@ -112,6 +107,7 @@ const makeStyles = (c: Palette, f: FontScale) =>
       alignItems: 'center',
     },
     upNextLabel: {
+      textAlign: 'center',
       color: c.muted,
       fontSize: f.timerLabel,
       fontWeight: '700',
@@ -124,6 +120,8 @@ const makeStyles = (c: Palette, f: FontScale) =>
       marginTop: 4,
     },
     sessionName: {
+      maxWidth: '100%',
+      textAlign: 'center',
       color: c.text,
       fontSize: f.body,
       fontWeight: '700',

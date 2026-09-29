@@ -1,0 +1,38 @@
+import assert from 'node:assert/strict';
+import { test } from 'node:test';
+
+import { countdownProgress } from '../src/timer/schedule.ts';
+import type { WorkoutSession } from '../src/types';
+
+const session: WorkoutSession = {
+  id: 'progress',
+  name: 'progress',
+  prepareTime: 5,
+  workTime: 20,
+  restTime: 10,
+  cooldownTime: 15,
+  rounds: 2,
+  createdAt: new Date(),
+};
+
+test('each phase starts at a full progress circle', () => {
+  assert.equal(countdownProgress({ phase: 'prepare', timeRemaining: 5, session, isComplete: false }), 1);
+  assert.equal(countdownProgress({ phase: 'work', timeRemaining: 20, session, isComplete: false }), 1);
+  assert.equal(countdownProgress({ phase: 'rest', timeRemaining: 10, session, isComplete: false }), 1);
+  assert.equal(countdownProgress({ phase: 'cooldown', timeRemaining: 15, session, isComplete: false }), 1);
+});
+
+test('progress follows the remaining share of every phase', () => {
+  assert.equal(countdownProgress({ phase: 'prepare', timeRemaining: 4, session, isComplete: false }), 0.8);
+  assert.equal(countdownProgress({ phase: 'work', timeRemaining: 10, session, isComplete: false }), 0.5);
+  assert.equal(countdownProgress({ phase: 'rest', timeRemaining: 1, session, isComplete: false }), 0.1);
+  assert.equal(countdownProgress({ phase: 'cooldown', timeRemaining: 3, session, isComplete: false }), 0.2);
+});
+
+test('progress disappears at completion and clamps invalid edge values', () => {
+  assert.equal(countdownProgress({ phase: 'work', timeRemaining: 20, session, isComplete: true }), 0);
+  assert.equal(countdownProgress({ phase: 'work', timeRemaining: 0, session, isComplete: false }), 0);
+  assert.equal(countdownProgress({ phase: 'work', timeRemaining: -1, session, isComplete: false }), 0);
+  assert.equal(countdownProgress({ phase: 'work', timeRemaining: 25, session, isComplete: false }), 1);
+  assert.equal(countdownProgress({ phase: 'work', timeRemaining: 10, session: null, isComplete: false }), 0);
+});

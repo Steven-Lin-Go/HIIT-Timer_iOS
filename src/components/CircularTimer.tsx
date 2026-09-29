@@ -13,7 +13,7 @@ interface Props {
   accent: string;
   subLabel?: string; // e.g. "1 / 8 ROUND"
   size?: number;
-  /** 0-1 share of the segment still to run. Omit for a full ring. */
+  /** 0-1 share of the current interval still remaining. */
   progress?: number;
   /** Opaque panel behind the readout, for use over a photo backdrop. */
   plate?: boolean;
@@ -21,8 +21,9 @@ interface Props {
 
 // The ring around the time. Each theme draws it with its own stroke character
 // (see RingStyle in palettes.ts) so the four styles differ in form, not just
-// hue: Fitness is a hard even band, Bohemian a painted double stroke, Zen an
-// open hand-drawn enso, and Natural a thin track with a rounded head.
+// hue: Fitness is a hard even band, Bohemian a painted double stroke, Zen a
+// hand-drawn ink circle, and Natural a fine rounded ring. Every
+// style keeps a closed track so the timer boundary remains visually complete.
 export function CircularTimer({
   time,
   phaseLabel,
@@ -42,83 +43,104 @@ export function CircularTimer({
   const cx = size / 2;
   const cy = size / 2;
   const circumference = 2 * Math.PI * r;
-  const arc = circumference * spec.sweep;
-  const clamped = Math.max(0, Math.min(1, progress));
-  const rotate = `rotate(${spec.rotation} ${cx} ${cy})`;
-
-  // Head position for the styles that cap the progress arc with a dot.
-  const headAngle = ((spec.rotation + 360 * spec.sweep * clamped) * Math.PI) / 180;
-  const headX = cx + r * Math.cos(headAngle);
-  const headY = cy + r * Math.sin(headAngle);
+  const clampedProgress = Math.max(0, Math.min(1, progress));
+  const progressDash =
+    clampedProgress >= 0.999999
+      ? undefined
+      : `${circumference * clampedProgress} ${circumference}`;
+  const brushRadius = r - stroke * 0.42;
+  const brushCircumference = 2 * Math.PI * brushRadius;
+  const brushDash =
+    clampedProgress >= 0.999999
+      ? undefined
+      : `${brushCircumference * clampedProgress} ${brushCircumference}`;
 
   return (
-    <View style={{ width: size, height: size }}>
+    <View testID="timer-ring" style={{ width: size, height: size, flexShrink: 0 }}>
       <Svg width={size} height={size} style={StyleSheet.absoluteFill}>
-        <G transform={rotate}>
-          {/* Track */}
+        {/* A closed base track preserves the timer boundary in every theme. */}
+        <Circle
+          cx={cx}
+          cy={cy}
+          r={r}
+          fill="none"
+          stroke={spec.trackColor === 'soft' ? c.motifSoft : c.border}
+          strokeWidth={stroke}
+          strokeLinecap={spec.cap}
+          opacity={spec.trackOpacity}
+        />
+        {/* Zen's second, lighter pass reads as ink bleeding off the brush. */}
+        {c.ringStyle === 'enso' ? (
           <Circle
             cx={cx}
             cy={cy}
-            r={r}
+            r={r - stroke * 0.55}
             fill="none"
-            stroke={spec.trackColor === 'soft' ? c.motifSoft : c.border}
-            strokeWidth={stroke}
-            strokeLinecap={spec.cap}
-            strokeDasharray={`${arc} ${circumference}`}
-            opacity={spec.trackOpacity}
+            stroke={c.motifInk}
+            strokeWidth={2.5}
+            strokeLinecap="round"
+            opacity={0.35}
           />
-          {/* Zen's second, lighter pass reads as ink bleeding off the brush. */}
-          {c.ringStyle === 'enso' ? (
+        ) : null}
+        {/* The phase-colored arc drains clockwise with the remaining time. */}
+        {clampedProgress > 0 ? (
+          <G testID="timer-progress" transform={`rotate(-90 ${cx} ${cy})`}>
             <Circle
               cx={cx}
               cy={cy}
-              r={r - stroke * 0.55}
+              r={r}
               fill="none"
-              stroke={c.motifInk}
-              strokeWidth={2.5}
-              strokeLinecap="round"
-              strokeDasharray={`${circumference * (spec.sweep - 0.08)} ${circumference}`}
-              opacity={0.35}
+              stroke={accent}
+              strokeWidth={spec.accentWidth}
+              strokeLinecap={spec.cap}
+              strokeDasharray={progressDash}
             />
-          ) : null}
-          {/* Progress */}
-          <Circle
-            cx={cx}
-            cy={cy}
-            r={r}
-            fill="none"
-            stroke={accent}
-            strokeWidth={spec.progressWidth}
-            strokeLinecap={spec.cap}
-            strokeDasharray={`${arc * clamped} ${circumference}`}
-          />
-          {/* Bohemian lays a thin inner stroke over the band for a painted edge. */}
-          {c.ringStyle === 'brush' ? (
-            <Circle
-              cx={cx}
-              cy={cy}
-              r={r - stroke * 0.42}
-              fill="none"
-              stroke={c.motifInk}
-              strokeWidth={4}
-              strokeLinecap="round"
-              strokeDasharray={`${arc * clamped * 0.94} ${circumference}`}
-              opacity={0.4}
-            />
-          ) : null}
-        </G>
-        {spec.head && clamped > 0.01 && clamped < 0.995 ? (
-          <Circle cx={headX} cy={headY} r={spec.progressWidth * 0.72} fill={accent} />
+            {/* Bohemian keeps its painted inner edge synchronized with progress. */}
+            {c.ringStyle === 'brush' ? (
+              <Circle
+                cx={cx}
+                cy={cy}
+                r={brushRadius}
+                fill="none"
+                stroke={c.motifInk}
+                strokeWidth={4}
+                strokeLinecap="round"
+                strokeDasharray={brushDash}
+                opacity={0.4}
+              />
+            ) : null}
+          </G>
         ) : null}
       </Svg>
 
       <View style={styles.center}>
-        <View style={[styles.readout, plate && styles.plate]}>
-          <Text style={[styles.phase, { color: accent }]}>{phaseLabel}</Text>
-          <Text style={[styles.time, { fontSize: Math.min(f.timer, Math.round((size / 280) * f.timer)) }]}>
+        <View testID="timer-readout" style={[styles.readout, { paddingVertical: size * 0.02 }, plate && styles.plate]}>
+          <Text
+            testID="timer-phase"
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            maxFontSizeMultiplier={1.2}
+            style={[styles.phase, { color: accent, fontSize: Math.min(f.timerLabel, size * 0.075) }]}
+          >{phaseLabel}</Text>
+          <Text
+            testID="timer-time"
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.4}
+            maxFontSizeMultiplier={1}
+            style={[styles.time, { fontSize: Math.min(f.timer, size * 0.205, size * 0.64 / (time.length * 0.65)) }]}
+          >
             {time}
           </Text>
-          {subLabel ? <Text style={styles.sub}>{subLabel}</Text> : null}
+          {subLabel ? (
+            <Text
+              testID="timer-sub"
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              maxFontSizeMultiplier={1.2}
+              style={[styles.sub, { fontSize: Math.min(f.timerSub, size * 0.065) }]}
+            >{subLabel}</Text>
+          ) : null}
         </View>
       </View>
     </View>
@@ -127,61 +149,45 @@ export function CircularTimer({
 
 interface RingSpec {
   width: number;
-  progressWidth: number;
+  accentWidth: number;
   cap: 'butt' | 'round';
-  /** Share of the full circle the ring occupies; < 1 leaves an open gap. */
-  sweep: number;
-  rotation: number;
   inset: number;
   trackColor: 'border' | 'soft';
   trackOpacity: number;
-  head: boolean;
 }
 
 const RING_SPECS: Record<RingStyle, RingSpec> = {
   bold: {
     width: 10,
-    progressWidth: 10,
+    accentWidth: 10,
     cap: 'butt',
-    sweep: 1,
-    rotation: -90,
     inset: 2,
     trackColor: 'border',
     trackOpacity: 1,
-    head: false,
   },
   brush: {
     width: 14,
-    progressWidth: 14,
+    accentWidth: 14,
     cap: 'round',
-    sweep: 1,
-    rotation: -96,
     inset: 2,
     trackColor: 'soft',
     trackOpacity: 0.5,
-    head: false,
   },
   enso: {
     width: 9,
-    progressWidth: 9,
+    accentWidth: 9,
     cap: 'round',
-    sweep: 0.9,
-    rotation: -66,
     inset: 4,
     trackColor: 'soft',
     trackOpacity: 0.75,
-    head: false,
   },
   fine: {
     width: 4,
-    progressWidth: 7,
+    accentWidth: 7,
     cap: 'round',
-    sweep: 1,
-    rotation: -90,
     inset: 6,
     trackColor: 'border',
     trackOpacity: 1,
-    head: true,
   },
 };
 
@@ -198,30 +204,36 @@ const makeStyles = (c: Palette, f: FontScale) =>
     },
     readout: {
       alignItems: 'center',
-      paddingHorizontal: 18,
-      paddingVertical: 10,
+      width: '66%',
+      paddingHorizontal: 2,
     },
     plate: {
       backgroundColor: c.plate,
       borderRadius: radius.xl,
     },
     phase: {
+      width: '90%',
+      textAlign: 'center',
       fontSize: f.timerLabel,
       fontWeight: '800',
-      letterSpacing: 2,
+      letterSpacing: 0,
     },
     time: {
+      width: '100%',
+      textAlign: 'center',
+      fontVariant: ['tabular-nums'],
       color: c.text,
       fontSize: f.timer,
       fontWeight: '800',
-      letterSpacing: -2,
+      letterSpacing: 0,
       marginTop: 4,
     },
     sub: {
+      width: '90%',
       color: c.muted,
       fontSize: f.timerSub,
       fontWeight: '700',
-      letterSpacing: 1.5,
+      letterSpacing: 0,
       marginTop: 6,
       textAlign: 'center',
     },

@@ -2,6 +2,13 @@ export type Lang = 'zh-TW' | 'en';
 
 // Flat key → translation. Keep keys stable; English is the fallback.
 const en = {
+  'common.back': 'Back',
+  'control.increase': 'Increase {label}',
+  'control.decrease': 'Decrease {label}',
+  'run.pause': 'Pause',
+  'run.resume': 'Resume',
+  'run.previous': 'Previous interval',
+  'run.next': 'Next interval',
   'tab.timer': 'TIMER',
   'tab.workouts': 'WORKOUTS',
   'tab.stats': 'STATS',
@@ -122,6 +129,13 @@ const en = {
 export type StringKey = keyof typeof en;
 
 const zh: Record<StringKey, string> = {
+  'common.back': '返回',
+  'control.increase': '增加{label}',
+  'control.decrease': '減少{label}',
+  'run.pause': '暫停',
+  'run.resume': '繼續',
+  'run.previous': '上一個階段',
+  'run.next': '下一個階段',
   'tab.timer': '計時',
   'tab.workouts': '課表',
   'tab.stats': '統計',

@@ -3,6 +3,12 @@
     "name": "HIIT Timer",
     "slug": "stevenlin",
     "version": "1.0.0",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/884be3dc-bf2e-4b22-85e0-f81eb5d50520"
+    },
     "icon": "./assets/icon.png",
     "orientation": "default",
     "userInterfaceStyle": "automatic",

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { ScreenHeader } from '../components/ScreenHeader';
 import { Stepper } from '../components/Stepper';
@@ -73,6 +73,11 @@ export function TimerSetupScreen() {
     setTimerScreen('home');
   };
 
+  const cancel = () => {
+    setTimerScreen('home');
+    setTab(setupReturnTo);
+  };
+
   const save = () => {
     if (editingId) {
       updateWorkout(editingId, draft);
@@ -87,11 +92,12 @@ export function TimerSetupScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <ScreenHeader title={t('header.setup')} onBack={() => setTimerScreen('home')} right="none" />
+    <KeyboardAvoidingView testID="setup-screen" style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <ScreenHeader title={t('header.setup')} onBack={cancel} right="none" />
       <ScrollView contentContainerStyle={styles.body} keyboardShouldPersistTaps="handled">
         <Text style={styles.fieldLabel}>{t('setup.name')}</Text>
         <TextInput
+          accessibilityLabel={t('setup.name')}
           value={draft.name}
           onChangeText={(name) => patch({ name })}
           placeholder={t('setup.namePlaceholder')}
@@ -175,25 +181,24 @@ export function TimerSetupScreen() {
           </Pressable>
         </View>
         <Text style={styles.hint}>{t('setup.modeHint')}</Text>
+        <View style={styles.actions}>
+          <Pressable
+            style={({ pressed }) => [styles.useBtn, pressed && styles.pressed]}
+            onPress={use}
+          >
+            <Text style={styles.useText}>{t('setup.use')}</Text>
+          </Pressable>
+          <Pressable
+            style={({ pressed }) => [styles.saveBtn, pressed && styles.pressed]}
+            onPress={save}
+          >
+            <Text style={styles.saveText}>
+              {editingId ? t('setup.saveChanges') : t('setup.saveNew')}
+            </Text>
+          </Pressable>
+        </View>
       </ScrollView>
-
-      <View style={styles.actions}>
-        <Pressable
-          style={({ pressed }) => [styles.useBtn, pressed && styles.pressed]}
-          onPress={use}
-        >
-          <Text style={styles.useText}>{t('setup.use')}</Text>
-        </Pressable>
-        <Pressable
-          style={({ pressed }) => [styles.saveBtn, pressed && styles.pressed]}
-          onPress={save}
-        >
-          <Text style={styles.saveText}>
-            {editingId ? t('setup.saveChanges') : t('setup.saveNew')}
-          </Text>
-        </Pressable>
-      </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -233,6 +238,7 @@ const makeStyles = (c: Palette, f: FontScale) =>
     },
     modeRow: {
       flexDirection: 'row',
+      flexWrap: 'wrap',
       gap: spacing.sm,
     },
     modeBtn: {
@@ -241,7 +247,9 @@ const makeStyles = (c: Palette, f: FontScale) =>
       borderRadius: radius.md,
       borderWidth: 1,
       borderColor: 'transparent',
-      flex: 1,
+      flexGrow: 1,
+      flexBasis: 150,
+      paddingHorizontal: 10,
       paddingVertical: 12,
     },
     modeBtnActive: {
@@ -249,6 +257,8 @@ const makeStyles = (c: Palette, f: FontScale) =>
       borderColor: c.dutchOrange,
     },
     modeText: {
+      maxWidth: '100%',
+      textAlign: 'center',
       color: c.text,
       fontSize: f.small,
       fontWeight: '800',
@@ -264,20 +274,24 @@ const makeStyles = (c: Palette, f: FontScale) =>
     },
     actions: {
       flexDirection: 'row',
+      flexWrap: 'wrap',
       gap: spacing.sm,
       paddingBottom: spacing.md,
-      paddingHorizontal: spacing.lg,
-      paddingTop: spacing.sm,
+      paddingTop: spacing.md,
     },
     useBtn: {
       alignItems: 'center',
       borderColor: c.border,
       borderRadius: radius.lg,
       borderWidth: 1,
-      flex: 1,
+      flexGrow: 1,
+      flexBasis: 120,
+      paddingHorizontal: 10,
       paddingVertical: 16,
     },
     useText: {
+      maxWidth: '100%',
+      textAlign: 'center',
       color: c.text,
       fontSize: f.body,
       fontWeight: '800',
@@ -287,10 +301,14 @@ const makeStyles = (c: Palette, f: FontScale) =>
       alignItems: 'center',
       backgroundColor: c.work,
       borderRadius: radius.lg,
-      flex: 1.4,
+      flexGrow: 1.4,
+      flexBasis: 180,
+      paddingHorizontal: 10,
       paddingVertical: 16,
     },
     saveText: {
+      maxWidth: '100%',
+      textAlign: 'center',
       color: c.text,
       fontSize: f.body,
       fontWeight: '800',

@@ -66,28 +66,28 @@ export function WorkoutsScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <View testID="workouts-screen" style={styles.container}>
       <ScreenHeader title={t('header.workouts')} />
 
-      <View style={styles.subTabs}>
-        {(['presets', 'custom'] as SubTab[]).map((key) => (
-          <Pressable
-            key={key}
-            onPress={() => {
-              setSub(key);
-              setExpandedId(null);
-            }}
-            style={styles.subTab}
-          >
-            <Text style={[styles.subTabText, sub === key && styles.subTabActive]}>
-              {key === 'presets' ? t('workouts.presets') : t('workouts.mine')}
-            </Text>
-            {sub === key ? <View style={styles.subTabBar} /> : null}
-          </Pressable>
-        ))}
-      </View>
-
       <ScrollView contentContainerStyle={styles.body}>
+        <View style={styles.subTabs}>
+          {(['presets', 'custom'] as SubTab[]).map((key) => (
+            <Pressable
+              key={key}
+              onPress={() => {
+                setSub(key);
+                setExpandedId(null);
+              }}
+              style={styles.subTab}
+            >
+              <Text style={[styles.subTabText, sub === key && styles.subTabActive]}>
+                {key === 'presets' ? t('workouts.presets') : t('workouts.mine')}
+              </Text>
+              {sub === key ? <View style={styles.subTabBar} /> : null}
+            </Pressable>
+          ))}
+        </View>
+
         {list.length === 0 ? (
           <Text style={styles.empty}>{t('workouts.empty')}</Text>
         ) : (
@@ -120,7 +120,7 @@ export function WorkoutsScreen() {
                         </Text>
                       </View>
                     ) : null}
-                    <Text style={styles.chevron}>{expanded ? '⌃' : '⌄'}</Text>
+                    <Text maxFontSizeMultiplier={1} style={styles.chevron}>{expanded ? '⌃' : '⌄'}</Text>
                   </Pressable>
 
                   {expanded ? (
@@ -184,16 +184,15 @@ export function WorkoutsScreen() {
             })}
           </>
         )}
+        <View style={styles.footer}>
+          <Pressable
+            style={({ pressed }) => [styles.newBtn, pressed && styles.pressed]}
+            onPress={() => openSetup(null, 'workouts')}
+          >
+            <Text style={styles.newText}>{t('workouts.new')}</Text>
+          </Pressable>
+        </View>
       </ScrollView>
-
-      <View style={styles.footer}>
-        <Pressable
-          style={({ pressed }) => [styles.newBtn, pressed && styles.pressed]}
-          onPress={() => openSetup(null, 'workouts')}
-        >
-          <Text style={styles.newText}>{t('workouts.new')}</Text>
-        </Pressable>
-      </View>
     </View>
   );
 }
@@ -227,7 +226,7 @@ function IconButton({
         disabled && styles.iconDisabled,
       ]}
     >
-      <Text style={[styles.iconGlyph, danger && styles.iconDanger]}>{glyph}</Text>
+      <Text maxFontSizeMultiplier={1} style={[styles.iconGlyph, danger && styles.iconDanger]}>{glyph}</Text>
     </Pressable>
   );
 }
@@ -237,8 +236,9 @@ const makeStyles = (c: Palette, f: FontScale) =>
     container: { flex: 1 },
     subTabs: {
       flexDirection: 'row',
+      flexWrap: 'wrap',
       gap: spacing.xl,
-      paddingHorizontal: spacing.lg,
+      marginBottom: spacing.md,
     },
     subTab: {
       alignItems: 'center',
@@ -288,10 +288,11 @@ const makeStyles = (c: Palette, f: FontScale) =>
     cardHead: {
       alignItems: 'center',
       flexDirection: 'row',
+      flexWrap: 'wrap',
       gap: spacing.sm,
       padding: spacing.md,
     },
-    cardMain: { flex: 1 },
+    cardMain: { flexBasis: 150, flexGrow: 1, minWidth: 0 },
     cardName: {
       color: c.text,
       fontSize: f.label,
@@ -322,6 +323,7 @@ const makeStyles = (c: Palette, f: FontScale) =>
     actions: {
       alignItems: 'center',
       flexDirection: 'row',
+      flexWrap: 'wrap',
       gap: spacing.xs,
       marginTop: spacing.xs,
     },
@@ -329,7 +331,8 @@ const makeStyles = (c: Palette, f: FontScale) =>
       alignItems: 'center',
       backgroundColor: c.work,
       borderRadius: radius.sm,
-      flex: 1,
+      flexGrow: 1,
+      flexBasis: 90,
       paddingVertical: 12,
     },
     startText: {
@@ -367,7 +370,6 @@ const makeStyles = (c: Palette, f: FontScale) =>
     },
     footer: {
       paddingBottom: spacing.md,
-      paddingHorizontal: spacing.lg,
       paddingTop: spacing.sm,
     },
     newBtn: {
