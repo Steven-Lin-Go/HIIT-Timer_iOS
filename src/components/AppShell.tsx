@@ -3,7 +3,7 @@ import * as Haptics from 'expo-haptics';
 import * as Speech from 'expo-speech';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useMemo, useRef } from 'react';
-import { AppState, StyleSheet, View } from 'react-native';
+import { AppState, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { speechLocale, voicePhrase } from '../lib/voice';
@@ -43,6 +43,9 @@ export function AppShell() {
   const vibrationOn = useSettingsStore((s) => s.vibration);
   const voiceOn = useSettingsStore((s) => s.countdownVoice);
   const lang = useSettingsStore((s) => s.language);
+  const landscapeRibbonPosition = useSettingsStore((s) => s.landscapeRibbonPosition);
+  const { width, height } = useWindowDimensions();
+  const isLandscape = width > height;
   const c = useTheme();
   const styles = useMemo(() => makeStyles(c), [c]);
 
@@ -109,12 +112,17 @@ export function AppShell() {
     }
   }, [timeRemaining, voiceOn, lang, isRunning, isPaused, isComplete]);
 
-  // 1s driver while running.
+  // Sample the wall-clock timeline faster than the visible one-second steps.
+  // A 1s interval can drift across a segment boundary and skip the brief
+  // `duration` state of the next phase, making its first rendered ring already
+  // one step short. The derived timer remains second-based; this only ensures
+  // boundary states are observed promptly after pause/resume or timer drift.
   useEffect(() => {
     if (!isRunning || isPaused || isComplete || !currentSession) {
       return;
     }
-    const id = setInterval(() => tick(), 1000);
+    tick();
+    const id = setInterval(() => tick(), 100);
     return () => clearInterval(id);
   }, [currentSession, isComplete, isPaused, isRunning, tick]);
 
@@ -147,8 +155,16 @@ export function AppShell() {
       <AppBackdrop variant={onTimerScreen ? 'hero' : 'corner'} allowCustom={onTimerScreen} />
       <SafeAreaView style={styles.safeArea}>
         <StatusBar style={c.statusBar} />
-        <View style={styles.content}>{renderScreen()}</View>
-        {showTabBar ? <TabBar /> : null}
+        <View style={[styles.shell, isLandscape && styles.shellLandscape]}>
+          {showTabBar && isLandscape && landscapeRibbonPosition === 'left' ? (
+            <TabBar orientation="vertical" side="left" />
+          ) : null}
+          <View style={styles.content}>{renderScreen()}</View>
+          {showTabBar && isLandscape && landscapeRibbonPosition === 'right' ? (
+            <TabBar orientation="vertical" side="right" />
+          ) : null}
+        </View>
+        {showTabBar && !isLandscape ? <TabBar /> : null}
       </SafeAreaView>
       {settingsOpen ? (
         <SafeAreaView style={styles.overlay}>
@@ -166,6 +182,8 @@ const makeStyles = (c: Palette) =>
       flex: 1,
     },
     safeArea: { flex: 1 },
+    shell: { flex: 1 },
+    shellLandscape: { flexDirection: 'row' },
     content: { flex: 1 },
     overlay: {
       backgroundColor: c.bg,

@@ -15,6 +15,7 @@ const DEFAULTS: AppSettings = {
   countdownVoice: false,
   language: 'zh-TW',
   theme: 'fitness',
+  landscapeRibbonPosition: 'right',
   backgroundUri: null,
   backgroundLevel: 'medium',
 };

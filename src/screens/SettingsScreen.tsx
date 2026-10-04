@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Alert, Image, Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import { Alert, Image, Pressable, ScrollView, StyleSheet, Switch, Text, useWindowDimensions, View } from 'react-native';
 
 import appConfig from '../../app.json';
 import { ScreenHeader } from '../components/ScreenHeader';
@@ -14,7 +14,7 @@ import { useTheme } from '../theme/useTheme';
 import { useFont } from '../theme/useFont';
 import type { Palette } from '../theme/palettes';
 import { radius, spacing, type FontScale } from '../theme/fitness';
-import type { BackgroundLevel } from '../types';
+import type { BackgroundLevel, LandscapeRibbonPosition } from '../types';
 
 // Read from app.json so the footer cannot drift from the shipped version.
 const APP_VERSION = appConfig.expo.version;
@@ -33,7 +33,9 @@ export function SettingsScreen() {
   const c = useTheme();
   const f = useFont();
   const t = useT();
-  const styles = useMemo(() => makeStyles(c, f), [c, f]);
+  const { width } = useWindowDimensions();
+  const compact = width < 360;
+  const styles = useMemo(() => makeStyles(c, f, compact), [c, f, compact]);
   const [picking, setPicking] = useState(false);
 
   const chooseBackground = async () => {
@@ -90,11 +92,13 @@ export function SettingsScreen() {
             styles={styles}
             label={t('settings.timeFormat')}
             options={[
-              { value: 'MM:SS', label: 'MM:SS' },
-              { value: 'SS', label: 'SS' },
+              { value: 'MM:SS', label: 'mm:ss' },
+              { value: 'SS', label: 'ss' },
             ]}
             value={settings.timeFormat}
             onSelect={(v) => update({ timeFormat: v as 'MM:SS' | 'SS' })}
+            labelTestID="time-format-label"
+            singleLineLabel
           />
           <Toggle styles={styles} label={t('settings.sound')} value={settings.sound} onChange={(sound) => update({ sound })} />
           <Toggle styles={styles} label={t('settings.vibration')} value={settings.vibration} onChange={(vibration) => update({ vibration })} />
@@ -118,6 +122,19 @@ export function SettingsScreen() {
             ]}
             value={settings.language}
             onSelect={(v) => update({ language: v as 'zh-TW' | 'en' })}
+            labelTestID="language-label"
+            singleLineLabel
+          />
+          <Choice
+            styles={styles}
+            label={t('settings.landscapeRibbonPosition')}
+            options={[
+              { value: 'right', label: t('settings.ribbonRight') },
+              { value: 'left', label: t('settings.ribbonLeft') },
+            ]}
+            value={settings.landscapeRibbonPosition}
+            onSelect={(v) => update({ landscapeRibbonPosition: v as LandscapeRibbonPosition })}
+            labelTestID="landscape-position-label"
             last
           />
         </View>
@@ -140,7 +157,20 @@ export function SettingsScreen() {
                 ]}
               >
                 <ThemeMotif variant="hero" theme={name} />
-                <View style={[styles.tileRing, { borderColor: p.work }]} />
+                <View
+                  testID={`theme-indicator-${name}`}
+                  style={[
+                    styles.tileRing,
+                    { borderColor: p.work },
+                  ]}
+                >
+                  {selected ? (
+                    <View
+                      testID={`theme-indicator-fill-${name}`}
+                      style={[styles.tileRingFill, { backgroundColor: p.work }]}
+                    />
+                  ) : null}
+                </View>
                 <Text style={[styles.tileLabel, { color: p.text }]}>{t(`theme.${name}`)}</Text>
               </Pressable>
             );
@@ -240,6 +270,8 @@ function Choice({
   value,
   onSelect,
   last,
+  singleLineLabel,
+  labelTestID,
 }: {
   styles: ReturnType<typeof makeStyles>;
   label: string;
@@ -247,18 +279,38 @@ function Choice({
   value: string;
   onSelect: (v: string) => void;
   last?: boolean;
+  singleLineLabel?: boolean;
+  labelTestID?: string;
 }) {
   return (
-    <View style={[styles.row, last && styles.last]}>
-      <Text style={styles.rowLabel}>{label}</Text>
-      <View style={styles.segment}>
+    <View style={[styles.row, styles.choiceRow, last && styles.last]}>
+      <Text
+        adjustsFontSizeToFit
+        maxFontSizeMultiplier={1}
+        minimumFontScale={0.85}
+        numberOfLines={singleLineLabel ? 1 : 2}
+        testID={labelTestID}
+        style={[styles.rowLabel, styles.choiceLabel, !singleLineLabel && styles.multilineChoiceLabel]}
+      >
+        {label}
+      </Text>
+      <View style={[styles.segment, styles.choiceSegment]}>
         {options.map((opt) => (
           <Pressable
             key={opt.value}
             onPress={() => onSelect(opt.value)}
-            style={[styles.segmentBtn, value === opt.value && styles.segmentActive]}
+            style={[
+              styles.segmentBtn,
+              styles.choiceSegmentBtn,
+              value === opt.value && styles.segmentActive,
+            ]}
           >
-            <Text style={[styles.segmentText, value === opt.value && styles.segmentTextActive]}>
+            <Text
+              adjustsFontSizeToFit
+              minimumFontScale={0.85}
+              numberOfLines={2}
+              style={[styles.segmentText, value === opt.value && styles.segmentTextActive]}
+            >
               {opt.label}
             </Text>
           </Pressable>
@@ -268,10 +320,10 @@ function Choice({
   );
 }
 
-const makeStyles = (c: Palette, f: FontScale) =>
+const makeStyles = (c: Palette, f: FontScale, compact = false) =>
   StyleSheet.create({
     container: { flex: 1 },
-    body: { padding: spacing.lg },
+    body: { padding: compact ? 8 : spacing.lg },
     group: {
       color: c.muted,
       fontSize: f.small,
@@ -285,7 +337,7 @@ const makeStyles = (c: Palette, f: FontScale) =>
       borderColor: c.border,
       borderRadius: radius.lg,
       borderWidth: 1,
-      paddingHorizontal: spacing.md,
+      paddingHorizontal: compact ? 6 : spacing.md,
     },
     row: {
       alignItems: 'center',
@@ -302,9 +354,24 @@ const makeStyles = (c: Palette, f: FontScale) =>
       flexBasis: 120,
       flexGrow: 1,
       flexShrink: 1,
+      minWidth: 120,
       color: c.text,
       fontSize: f.label,
       fontWeight: '600',
+      lineHeight: Math.round(f.label * 1.35),
+    },
+    choiceRow: {
+      flexWrap: 'nowrap',
+      gap: 0,
+    },
+    choiceLabel: {
+      flexBasis: 90,
+      flexGrow: 0,
+      minWidth: 90,
+    },
+    multilineChoiceLabel: {
+      fontSize: f.small,
+      lineHeight: Math.round(f.small * 1.35),
     },
     segment: {
       maxWidth: '100%',
@@ -314,12 +381,20 @@ const makeStyles = (c: Palette, f: FontScale) =>
       flexDirection: 'row',
       overflow: 'hidden',
     },
+    choiceSegment: {
+      flexShrink: 0,
+      marginLeft: 'auto',
+      width: 200,
+    },
     segmentBtn: {
       flexGrow: 1,
       minHeight: 44,
       justifyContent: 'center',
       paddingHorizontal: 12,
       paddingVertical: 6,
+    },
+    choiceSegmentBtn: {
+      flexBasis: 0,
     },
     segmentActive: {
       backgroundColor: c.work,
@@ -329,6 +404,7 @@ const makeStyles = (c: Palette, f: FontScale) =>
       color: c.muted,
       fontSize: f.small,
       fontWeight: '800',
+      lineHeight: Math.round(f.small * 1.3),
     },
     segmentTextActive: {
       color: c.text,
@@ -351,11 +427,20 @@ const makeStyles = (c: Palette, f: FontScale) =>
     },
     tileSelected: { borderWidth: 2 },
     tileRing: {
+      alignItems: 'center',
       borderRadius: radius.pill,
       borderWidth: 3,
       height: 34,
+      justifyContent: 'center',
       marginBottom: spacing.md,
       width: 34,
+    },
+    // 34px outer circle - 2 * 3px border leaves 28px. A 24px fill creates a
+    // 2px transparent ring, narrower than the 3px outline as specified.
+    tileRingFill: {
+      borderRadius: radius.pill,
+      height: 24,
+      width: 24,
     },
     tileLabel: {
       fontSize: f.small,

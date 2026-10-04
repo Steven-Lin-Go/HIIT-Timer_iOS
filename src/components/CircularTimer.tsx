@@ -15,6 +15,8 @@ interface Props {
   size?: number;
   /** 0-1 share of the current interval still remaining. */
   progress?: number;
+  /** Remounts the native progress layer when the timer enters a new interval. */
+  progressKey?: string;
   /** Opaque panel behind the readout, for use over a photo backdrop. */
   plate?: boolean;
 }
@@ -31,6 +33,7 @@ export function CircularTimer({
   subLabel,
   size = 280,
   progress = 1,
+  progressKey,
   plate = false,
 }: Props) {
   const c = useTheme();
@@ -44,16 +47,20 @@ export function CircularTimer({
   const cy = size / 2;
   const circumference = 2 * Math.PI * r;
   const clampedProgress = Math.max(0, Math.min(1, progress));
+  // Always send an explicit dash pattern. On native react-native-svg, changing
+  // an existing partial dash back to `undefined` can leave the old native dash
+  // value in place for the first frame of the next interval. A zero-length gap
+  // forces that reused Circle node back to a genuinely closed ring.
   const progressDash =
     clampedProgress >= 0.999999
-      ? undefined
-      : `${circumference * clampedProgress} ${circumference}`;
+      ? [circumference, 0]
+      : [circumference * clampedProgress, circumference];
   const brushRadius = r - stroke * 0.42;
   const brushCircumference = 2 * Math.PI * brushRadius;
   const brushDash =
     clampedProgress >= 0.999999
-      ? undefined
-      : `${brushCircumference * clampedProgress} ${brushCircumference}`;
+      ? [brushCircumference, 0]
+      : [brushCircumference * clampedProgress, brushCircumference];
 
   return (
     <View testID="timer-ring" style={{ width: size, height: size, flexShrink: 0 }}>
@@ -84,7 +91,7 @@ export function CircularTimer({
         ) : null}
         {/* The phase-colored arc drains clockwise with the remaining time. */}
         {clampedProgress > 0 ? (
-          <G testID="timer-progress" transform={`rotate(-90 ${cx} ${cy})`}>
+          <G key={progressKey} testID="timer-progress" transform={`rotate(-90 ${cx} ${cy})`}>
             <Circle
               cx={cx}
               cy={cy}

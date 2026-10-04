@@ -14,7 +14,11 @@ export default defineConfig({
   ],
   webServer: {
     command: 'npx expo start --web --localhost --port 8081',
-    url: 'http://localhost:8081',
+    // Waiting for the HTML shell is not sufficient after a cold Metro cache:
+    // Expo can serve `/` before the application bundle has finished indexing.
+    // Prewarming the exact bundle URL prevents the first browser workers from
+    // receiving a transient JSON 404 in place of executable JavaScript.
+    url: 'http://localhost:8081/node_modules/expo/AppEntry.bundle?platform=web&dev=true&hot=false&lazy=true&transform.engine=hermes&transform.routerRoot=app&unstable_transformProfile=hermes-stable',
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,
     env: { EXPO_OFFLINE: '1', CI: '1' },

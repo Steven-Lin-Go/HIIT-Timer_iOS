@@ -36,6 +36,8 @@ export interface HistoryEntry {
 
 export type TimeFormat = 'MM:SS' | 'SS';
 
+export type LandscapeRibbonPosition = 'left' | 'right';
+
 // How strongly a background photo is allowed to show through. Each level maps
 // to a scrim opacity in theme/backdrops.ts; the strongest level still keeps a
 // substantial wash over the photo so timer digits stay readable.
@@ -50,6 +52,7 @@ export interface AppSettings {
   countdownVoice: boolean;
   language: 'zh-TW' | 'en';
   theme: 'fitness' | 'bohemia' | 'zen' | 'ikea';
+  landscapeRibbonPosition: LandscapeRibbonPosition;
   // Optional user-supplied backdrop for the timer screens. Stored as a file://
   // URI inside the app's document directory, so it survives cache eviction.
   backgroundUri: string | null;

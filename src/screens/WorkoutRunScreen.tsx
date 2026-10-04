@@ -4,6 +4,8 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useHasPhotoBackdrop } from '../components/AppBackdrop';
 import { TimerLayout } from '../components/TimerLayout';
 import { CircularTimer } from '../components/CircularTimer';
+import { CloseIcon } from '../components/CloseIcon';
+import { TransportIcon } from '../components/TransportIcon';
 import { useT } from '../i18n/useT';
 import { formatClock } from '../lib/format';
 import { useNavStore } from '../stores/navStore';
@@ -63,8 +65,13 @@ export function WorkoutRunScreen() {
   return (
     <View testID="run-screen" style={styles.container}>
       <View style={styles.topRow}>
-        <Pressable accessibilityRole="button" accessibilityLabel={t('run.finish')} onPress={finish} style={styles.closeButton}>
-          <Text maxFontSizeMultiplier={1} style={styles.close}>✕</Text>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t('run.finish')}
+          onPress={finish}
+          style={({ pressed }) => [styles.closeButton, pressed && styles.pressed]}
+        >
+          <CloseIcon color={c.work} />
         </Pressable>
         <Text style={[styles.round, onPhoto && styles.plate]}>
           {t('round')} {Math.min(currentRound, totalRounds)} / {totalRounds}
@@ -98,28 +105,28 @@ export function WorkoutRunScreen() {
                 accessibilityLabel={t('run.previous')}
                 accessibilityState={{ disabled: isPaused }}
                 disabled={isPaused}
-                style={({ pressed }) => [styles.sideBtn, isPaused && styles.disabled, pressed && styles.pressed]}
+                style={({ pressed }) => [styles.transportBtn, isPaused && styles.disabled, pressed && styles.pressed]}
                 testID="run-previous" onPress={() => skip('back')}
               >
-                <Text maxFontSizeMultiplier={1} style={styles.sideIcon}>⏮</Text>
+                <TransportIcon name="previous" color={c.text} />
               </Pressable>
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={t(isPaused ? 'run.resume' : 'run.pause')}
-                style={({ pressed }) => [styles.playBtn, pressed && styles.pressed]}
+                style={({ pressed }) => [styles.transportBtn, styles.pauseBtn, pressed && styles.pressed]}
                 testID="run-pause" onPress={() => (isPaused ? startTimer() : pauseTimer())}
               >
-                <Text maxFontSizeMultiplier={1} style={styles.playIcon}>{isPaused ? '▶' : '❙❙'}</Text>
+                <TransportIcon name={isPaused ? 'resume' : 'pause'} color={c.text} />
               </Pressable>
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={t('run.next')}
                 accessibilityState={{ disabled: isPaused }}
                 disabled={isPaused}
-                style={({ pressed }) => [styles.sideBtn, isPaused && styles.disabled, pressed && styles.pressed]}
+                style={({ pressed }) => [styles.transportBtn, isPaused && styles.disabled, pressed && styles.pressed]}
                 testID="run-next" onPress={() => skip('forward')}
               >
-                <Text maxFontSizeMultiplier={1} style={styles.sideIcon}>⏭</Text>
+                <TransportIcon name="next" color={c.text} />
               </Pressable>
             </View>
           )
@@ -133,6 +140,7 @@ export function WorkoutRunScreen() {
               accent={phaseAccent(c, displayPhase)}
               size={ringSize}
               progress={progress}
+              progressKey={`${currentPhase}-${currentRound}`}
               plate={onPhoto}
             />
 
@@ -163,11 +171,6 @@ const makeStyles = (c: Palette, f: FontScale) =>
       justifyContent: 'space-between',
       paddingHorizontal: spacing.lg,
       paddingVertical: spacing.md,
-    },
-    close: {
-      color: c.muted,
-      fontSize: 22,
-      fontWeight: '700',
     },
     closeButton: { width: 44, minHeight: 44, alignItems: 'center', justifyContent: 'center' },
     closeSpacer: { width: 44 },
@@ -212,34 +215,23 @@ const makeStyles = (c: Palette, f: FontScale) =>
     transport: {
       alignItems: 'center',
       flexDirection: 'row',
-      gap: spacing.xl,
+      gap: spacing.md,
       justifyContent: 'center',
       paddingBottom: spacing.xl,
     },
-    sideBtn: {
+    transportBtn: {
       alignItems: 'center',
       backgroundColor: c.surfaceAlt,
+      borderColor: c.border,
       borderRadius: radius.pill,
-      height: 56,
+      borderWidth: 1,
+      height: 64,
       justifyContent: 'center',
-      width: 56,
+      width: 64,
     },
-    sideIcon: {
-      color: c.text,
-      fontSize: 20,
-    },
-    playBtn: {
-      alignItems: 'center',
+    pauseBtn: {
       backgroundColor: c.work,
-      borderRadius: radius.pill,
-      height: 80,
-      justifyContent: 'center',
-      width: 80,
-    },
-    playIcon: {
-      color: c.text,
-      fontSize: 26,
-      fontWeight: '800',
+      borderColor: c.work,
     },
     actions: {
       gap: spacing.sm,

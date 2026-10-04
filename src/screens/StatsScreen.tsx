@@ -25,12 +25,16 @@ import { radius, spacing, type FontScale } from '../theme/fitness';
 // Screen 5: stats dashboard. Every figure is derived from real workout history.
 export function StatsScreen() {
   const [period, setPeriod] = useState<StatsPeriod>('week');
+  const [contentWidth, setContentWidth] = useState(0);
   const entries = useHistoryStore((s) => s.entries);
   const c = useTheme();
   const f = useFont();
   const t = useT();
-  const { width, fontScale } = useWindowDimensions();
-  const singleColumn = width < 380 || fontScale > 1.3;
+  const { width: windowWidth, fontScale } = useWindowDimensions();
+  // Use the screen's measured width after safe-area insets and the landscape
+  // ribbon have been deducted. Window width alone overestimates card space.
+  const availableWidth = contentWidth || windowWidth;
+  const singleColumn = availableWidth < 380 || fontScale > 1.3;
   const styles = useMemo(() => makeStyles(c, f, singleColumn), [c, f, singleColumn]);
 
   const scoped = filterByPeriod(entries, period);
@@ -44,7 +48,11 @@ export function StatsScreen() {
   const workDelta = percentChange(summary.totalWorkSec, previous.totalWorkSec);
 
   return (
-    <View testID="stats-screen" style={styles.container}>
+    <View
+      testID="stats-screen"
+      onLayout={(event) => setContentWidth(event.nativeEvent.layout.width)}
+      style={styles.container}
+    >
       <ScreenHeader title={t('header.stats')} />
 
       <ScrollView contentContainerStyle={styles.body}>

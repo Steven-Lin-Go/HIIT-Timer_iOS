@@ -14,6 +14,7 @@ async function seed(page: Page, language: string, theme = 'fitness', photo = fal
   await page.addInitScript(({ language, theme, photo, longName }) => {
     localStorage.setItem('hiit-settings', JSON.stringify({ version: 0, state: {
       language, theme, timeFormat: 'MM:SS', sound: false, vibration: false,
+      landscapeRibbonPosition: 'right',
       backgroundUri: photo ? 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"><rect width="20" height="20" fill="gray"/></svg>') : null,
     } }));
     localStorage.setItem('hiit-workouts', JSON.stringify({ version: 0, state: {
@@ -48,7 +49,13 @@ async function audit(page: Page, screen: string) {
       if (el.closest('[data-testid="stats-chart"]') || /^[⚙‹✕⏮⏭▶❙▲▼⌃⌄✎🗑−+]+$/u.test(value)) multiplier = 1;
       // RN Web does not implement native numeric shrink-to-fit. Leave numeric
       // readouts at base size; their native scaling needs device verification.
-      else if (el.dataset.testid === 'timer-time' || el.dataset.testid === 'stat-value') multiplier = 1;
+      else if (
+        el.dataset.testid === 'timer-time' ||
+        el.dataset.testid === 'stat-value' ||
+        el.dataset.testid === 'time-format-label' ||
+        el.dataset.testid === 'language-label' ||
+        el.dataset.testid === 'landscape-position-label'
+      ) multiplier = 1;
       else if (el.closest('[data-testid="timer-ring"]')) multiplier = 1.2;
       else if (el.closest('[data-testid="screen-header"]') || /^[\d:]+$/.test(value)) multiplier = Math.min(1.5, scale);
       el.style.fontSize = `${parseFloat(getComputedStyle(el).fontSize) * multiplier}px`;
@@ -113,9 +120,18 @@ async function ringFits(page: Page) {
   expect(errors).toEqual([]);
 }
 
+async function expectFullProgressRing(page: Page) {
+  const progressCircles = page.getByTestId('timer-progress').locator('circle');
+  for (let circle = 0; circle < await progressCircles.count(); circle += 1) {
+    const dash = await progressCircles.nth(circle).getAttribute('stroke-dasharray');
+    expect(dash).toMatch(/(?:[, ]|^)0$/);
+  }
+}
+
 async function flow(page: Page, language: string) {
   const zh = language === 'zh-TW';
   await audit(page, 'home-screen');
+  await expect(page.getByText(zh ? '準備開始' : 'READY TO TRAIN', { exact: true })).toHaveCount(0);
   await ringFits(page);
   await page.screenshot({ path: test.info().outputPath('home.png') });
   await page.getByTestId('header-settings').click();
@@ -141,6 +157,8 @@ async function flow(page: Page, language: string) {
   await page.screenshot({ path: test.info().outputPath('setup.png') });
   await page.getByText(zh ? '套用' : 'USE', { exact: true }).click();
   await page.getByText(zh ? '開始' : 'START', { exact: true }).click();
+  await expect(page.getByTestId('run-close-icon')).toBeVisible();
+  await expect(page.getByTestId('run-close-icon').locator('g')).toHaveAttribute('stroke-width', '4');
   await page.getByTestId('run-pause').click();
   await expect(page.getByTestId('run-pause')).toHaveAccessibleName(zh ? '繼續' : 'Resume');
   await expect(page.getByTestId('run-previous')).toBeDisabled();
@@ -149,6 +167,11 @@ async function flow(page: Page, language: string) {
   await page.getByTestId('run-pause').click();
   await expect(page.getByTestId('run-pause')).toHaveAccessibleName(zh ? '暫停' : 'Pause');
   await expect(page.getByTestId('run-next')).toBeEnabled();
+  const controlBoxes = await Promise.all(
+    ['run-previous', 'run-pause', 'run-next'].map((id) => page.getByTestId(id).boundingBox()),
+  );
+  expect(controlBoxes.every((box) => box?.width === controlBoxes[0]?.width)).toBe(true);
+  expect(controlBoxes.every((box) => box?.height === controlBoxes[0]?.height)).toBe(true);
   const phases = zh ? ['準備', '運動', '休息', '運動', '緩和', '完成'] : ['PREPARE', 'WORK', 'REST', 'WORK', 'COOL DOWN', 'DONE'];
   for (const [index, phase] of phases.entries()) {
     await expect(page.getByTestId('timer-phase')).toHaveText(phase);
@@ -157,10 +180,7 @@ async function flow(page: Page, language: string) {
     } else {
       await expect(page.getByTestId('timer-progress')).toBeVisible();
       if (index > 0) {
-        const progressCircles = page.getByTestId('timer-progress').locator('circle');
-        for (let circle = 0; circle < await progressCircles.count(); circle += 1) {
-          expect(await progressCircles.nth(circle).getAttribute('stroke-dasharray')).toBeNull();
-        }
+        await expectFullProgressRing(page);
       }
     }
     await audit(page, 'run-screen');
@@ -198,10 +218,7 @@ for (const theme of ['fitness', 'bohemia', 'zen', 'ikea']) {
     await safeViewport(page, 440, 956);
     await ringFits(page);
     // Every theme starts with a full colored ring without a seam.
-    const initialProgress = page.getByTestId('timer-progress').locator('circle');
-    for (let i = 0; i < await initialProgress.count(); i += 1) {
-      expect(await initialProgress.nth(i).getAttribute('stroke-dasharray')).toBeNull();
-    }
+    await expectFullProgressRing(page);
     await safeViewport(page, 956, 440);
     await audit(page, 'home-screen');
     await ringFits(page);
@@ -222,7 +239,7 @@ for (const theme of ['fitness', 'bohemia', 'zen', 'ikea']) {
     // the colored progress group while leaving the closed base track visible.
     await page.getByTestId('run-next').click();
     await expect(page.getByTestId('timer-phase')).toHaveText('運動');
-    await expect.poll(() => page.getByTestId('timer-progress').locator('circle').first().getAttribute('stroke-dasharray')).toBeNull();
+    await expectFullProgressRing(page);
     for (let remainingSkips = 32; remainingSkips > 0; remainingSkips -= 1) {
       const next = page.getByTestId('run-next');
       if (await next.count() === 0) break;
@@ -269,5 +286,92 @@ for (const language of ['zh-TW', 'en']) {
     await page.getByText(zh ? '我的課表' : 'MY WORKOUTS', { exact: true }).click();
     await expect(page.getByText(longName, { exact: true })).toBeVisible();
     await expect(page.getByText('Unsaved changes', { exact: true })).toHaveCount(0);
+  });
+}
+
+test('landscape ribbon defaults right, can move left, and returns to bottom in portrait', async ({ page }) => {
+  await seed(page, 'en');
+  await page.goto('/');
+  await safeViewport(page, 667, 375);
+
+  const bar = page.getByTestId('main-tab-bar');
+  const home = page.getByTestId('home-screen');
+  await expect(page.getByTestId('settings-gear-icon')).toBeVisible();
+  await expect(page.getByText('⚙', { exact: true })).toHaveCount(0);
+  await page.screenshot({ path: test.info().outputPath('sketch-gear.png') });
+  await expect(bar).toBeVisible();
+  let barBox = await bar.boundingBox();
+  let homeBox = await home.boundingBox();
+  expect(barBox).not.toBeNull();
+  expect(homeBox).not.toBeNull();
+  expect(barBox!.width).toBeLessThanOrEqual(86);
+  expect(barBox!.x).toBeGreaterThanOrEqual(homeBox!.x + homeBox!.width - 1);
+
+  await page.getByTestId('header-settings').click();
+  await expect(page.getByText('Landscape Navigation Position', { exact: true })).toBeVisible();
+  const optionWidths = await Promise.all(
+    ['mm:ss', 'ss', 'Right', 'Left'].map((label) =>
+      page.getByText(label, { exact: true }).evaluate((node) => node.parentElement!.getBoundingClientRect().width),
+    ),
+  );
+  expect(Math.abs(optionWidths[0]! - optionWidths[1]!)).toBeLessThan(1);
+  expect(Math.abs(optionWidths[2]! - optionWidths[3]!)).toBeLessThan(1);
+  await page.getByText('Left', { exact: true }).click();
+  await page.getByTestId('header-back').click();
+
+  barBox = await bar.boundingBox();
+  homeBox = await home.boundingBox();
+  expect(barBox).not.toBeNull();
+  expect(homeBox).not.toBeNull();
+  expect(barBox!.x + barBox!.width).toBeLessThanOrEqual(homeBox!.x + 1);
+
+  await safeViewport(page, 375, 667);
+  await expect(bar).toBeVisible();
+  barBox = await bar.boundingBox();
+  homeBox = await home.boundingBox();
+  expect(barBox).not.toBeNull();
+  expect(homeBox).not.toBeNull();
+  expect(barBox!.width).toBeGreaterThan(homeBox!.width - 1);
+  expect(barBox!.y).toBeGreaterThanOrEqual(homeBox!.y + homeBox!.height - 1);
+});
+
+for (const [width, height] of [[320, 568], [568, 320]]) {
+  test(`${width}x${height} long Chinese settings label wraps without changing option width`, async ({ page }) => {
+    await seed(page, 'zh-TW');
+    await page.goto('/');
+    await safeViewport(page, width!, height!);
+    await page.getByTestId('header-settings').click();
+    const settings = page.getByTestId('settings-screen');
+    await expect(page.getByText('裝置橫放的\n導覽列位置', { exact: true })).toBeVisible();
+    await audit(page, 'settings-screen');
+    const positionLabelMetrics = await page.getByTestId('landscape-position-label').evaluate((node) => ({
+      clientHeight: node.clientHeight,
+      scrollHeight: node.scrollHeight,
+      text: node.textContent,
+    }));
+    expect(positionLabelMetrics.text).toBe('裝置橫放的\n導覽列位置');
+    expect(positionLabelMetrics.scrollHeight).toBeLessThanOrEqual(positionLabelMetrics.clientHeight + 1);
+
+    for (const [label, option] of [
+      ['時間格式', 'mm:ss'],
+      ['語言', '正體中文'],
+      ['裝置橫放的\n導覽列位置', '右側'],
+    ]) {
+      const labelBox = await settings.getByText(label!, { exact: true }).boundingBox();
+      const optionBox = await settings.getByText(option!, { exact: true }).locator('..').boundingBox();
+      expect(labelBox).not.toBeNull();
+      expect(optionBox).not.toBeNull();
+      const labelCenter = labelBox!.y + labelBox!.height / 2;
+      const optionCenter = optionBox!.y + optionBox!.height / 2;
+      expect(Math.abs(labelCenter - optionCenter)).toBeLessThan(2);
+    }
+
+    const widths = await Promise.all(
+      ['右側', '左側'].map((label) =>
+        page.getByText(label, { exact: true }).evaluate((node) => node.parentElement!.getBoundingClientRect().width),
+      ),
+    );
+    expect(Math.abs(widths[0]! - widths[1]!)).toBeLessThan(1);
+    expect(widths[0]).toBeGreaterThanOrEqual(99);
   });
 }

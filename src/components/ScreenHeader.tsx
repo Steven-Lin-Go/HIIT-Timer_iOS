@@ -7,6 +7,7 @@ import { useTheme } from '../theme/useTheme';
 import { useFont } from '../theme/useFont';
 import type { Palette } from '../theme/palettes';
 import { type FontScale } from '../theme/fitness';
+import { SettingsGearIcon } from './SettingsGearIcon';
 
 interface Props {
   title: string;
@@ -36,7 +37,7 @@ export function ScreenHeader({ title, onBack, right = 'settings' }: Props) {
       <View style={[styles.side, styles.right]}>
         {right === 'settings' ? (
           <Pressable accessibilityRole="button" accessibilityLabel={t('header.settings')} testID="header-settings" onPress={openSettings} style={styles.tap}>
-            <Text maxFontSizeMultiplier={1} style={styles.icon}>⚙</Text>
+            <SettingsGearIcon color={c.text} size={33.6} />
           </Pressable>
         ) : null}
       </View>

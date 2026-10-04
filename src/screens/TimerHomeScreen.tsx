@@ -39,6 +39,7 @@ export function TimerHomeScreen() {
     <View testID="home-screen" style={styles.container}>
       <ScreenHeader title={t('header.timer')} />
       <TimerLayout
+        centerAll
         actions={
           <View style={styles.actions}>
             <Pressable
@@ -65,8 +66,6 @@ export function TimerHomeScreen() {
       >
         {(ringSize) => (
           <>
-            <Text style={[styles.status, onPhoto && styles.plate]}>⚡ {t('home.ready')}</Text>
-
             <CircularTimer
               time={formatClock(session?.workTime ?? 0, timeFormat)}
               phaseLabel={t('phase.work')}
@@ -96,13 +95,6 @@ export function TimerHomeScreen() {
 const makeStyles = (c: Palette, f: FontScale) =>
   StyleSheet.create({
     container: { flex: 1 },
-    status: {
-      textAlign: 'center',
-      color: c.rest,
-      fontSize: f.small,
-      fontWeight: '800',
-      letterSpacing: 1.5,
-    },
     upNext: {
       alignItems: 'center',
     },
