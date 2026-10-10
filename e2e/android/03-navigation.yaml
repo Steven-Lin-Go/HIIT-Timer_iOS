@@ -1,0 +1,26 @@
+# Tabs and the settings overlay open the right screens.
+appId: com.stevenlin.hiittimer
+name: Tab and settings navigation
+---
+- runFlow: common/launch.yaml
+- tapOn:
+    id: tab-workouts
+- assertVisible:
+    id: workouts-screen
+- tapOn:
+    id: tab-stats
+- assertVisible:
+    id: stats-screen
+- tapOn:
+    id: tab-timer
+- assertVisible:
+    id: home-screen
+
+- tapOn:
+    id: header-settings
+- assertVisible:
+    id: settings-screen
+- tapOn:
+    id: header-back
+- assertVisible:
+    id: home-screen

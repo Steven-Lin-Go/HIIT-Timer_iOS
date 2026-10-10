@@ -1,0 +1,33 @@
+# Cold-starts the development build and loads the JS bundle from the local
+# Metro server (D:\Android\start-hiit-metro.ps1 must be running).
+appId: com.stevenlin.hiittimer
+---
+# Right after an emulator quick-boot the first deep link can be dropped before
+# it reaches the app, so the launch is retried rather than failed outright.
+- retry:
+    maxRetries: 2
+    commands:
+      - stopApp
+      - openLink: exp+stevenlin://expo-development-client/?url=http%3A%2F%2Flocalhost%3A8081
+      - extendedWaitUntil:
+          visible:
+            id: home-screen
+          timeout: 60000
+
+# The dev build's floating "Tools" button sits on top of the app's settings
+# gear, so taps meant for the app would open the dev menu. It is a per-install
+# dev-menu preference (never present in release builds); turn it off once.
+- runFlow:
+    when:
+      visible: "^Tools$"
+    commands:
+      - tapOn: "^Tools$"
+      - scrollUntilVisible:
+          element: "Tools button"
+          direction: DOWN
+      - tapOn: "Tools button"
+      - back
+      - extendedWaitUntil:
+          visible:
+            id: home-screen
+          timeout: 10000

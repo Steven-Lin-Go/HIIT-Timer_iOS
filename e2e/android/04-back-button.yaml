@@ -1,0 +1,55 @@
+# Android only: the system back button/gesture steps back inside the app
+# (App.android.tsx) instead of exiting it. iOS has no back button, so this has
+# no iOS counterpart.
+appId: com.stevenlin.hiittimer
+name: Android back button stays in app
+---
+- runFlow: common/launch.yaml
+
+# Settings -> home.
+- tapOn:
+    id: header-settings
+- assertVisible:
+    id: settings-screen
+- back
+- assertVisible:
+    id: home-screen
+
+# Another tab -> timer tab.
+- tapOn:
+    id: tab-stats
+- assertVisible:
+    id: stats-screen
+- back
+- assertVisible:
+    id: home-screen
+
+# Setup -> home.
+- tapOn: "調整計時|ADJUST TIMER"
+- assertVisible:
+    id: setup-screen
+- back
+- assertVisible:
+    id: home-screen
+
+# Running session -> paused, back on home, session kept.
+- tapOn: "開始|START"
+- assertVisible:
+    id: run-screen
+- tapOn:
+    id: run-next
+- assertVisible: "運動|WORK"
+- back
+- assertVisible:
+    id: home-screen
+# START resumes the same session where it was left (work segment, running).
+- tapOn: "開始|START"
+- assertVisible:
+    id: run-screen
+- assertVisible: "運動|WORK"
+- assertVisible:
+    id: run-next
+    enabled: true
+- tapOn: "結束|FINISH"
+- assertVisible:
+    id: home-screen

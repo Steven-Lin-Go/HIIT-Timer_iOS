@@ -1,0 +1,15 @@
+# The home screen renders its timer summary, actions and tab bar.
+appId: com.stevenlin.hiittimer
+name: Home screen renders
+---
+- runFlow: common/launch.yaml
+- assertVisible:
+    id: timer-time
+- assertVisible:
+    id: timer-phase
+- assertVisible:
+    id: header-settings
+- assertVisible:
+    id: main-tab-bar
+- assertVisible: "開始|START"
+- assertVisible: "調整計時|ADJUST TIMER"

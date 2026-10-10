@@ -1,0 +1,35 @@
+# Start a session, pause and resume it, skip a segment, then finish.
+appId: com.stevenlin.hiittimer
+name: Timer run controls
+---
+- runFlow: common/launch.yaml
+- tapOn: "開始|START"
+- assertVisible:
+    id: run-screen
+# Every session opens on the prepare segment.
+- assertVisible: "準備|PREPARE"
+
+# Pause: skipping is disabled while paused.
+- tapOn:
+    id: run-pause
+- assertVisible:
+    id: run-next
+    enabled: false
+- assertVisible:
+    id: run-previous
+    enabled: false
+
+# Resume, then skip forward into the first work segment.
+- tapOn:
+    id: run-pause
+- assertVisible:
+    id: run-next
+    enabled: true
+- tapOn:
+    id: run-next
+- assertVisible: "運動|WORK"
+
+# Finish returns to the home screen.
+- tapOn: "結束|FINISH"
+- assertVisible:
+    id: home-screen

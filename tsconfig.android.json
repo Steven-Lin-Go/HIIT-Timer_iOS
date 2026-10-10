@@ -1,0 +1,8 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "App.android.tsx",
+    "src/**/*.ts",
+    "src/**/*.tsx"
+  ]
+}
